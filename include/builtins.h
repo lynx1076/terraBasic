@@ -1,6 +1,6 @@
 #ifndef BUILTINS_H
 #define BUILTINS_H
 
-int buin_Left()
+int buin_StrLeft();
 
 #endif
