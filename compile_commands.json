@@ -1,0 +1,42 @@
+[
+  {
+    "file": "src/easyCUI.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-O0",
+      "-DVERSION=0.1",
+      "-Iinclude",
+      "-MMD",
+      "-MP",
+      "-c",
+      "src/easyCUI.c",
+      "-o",
+      ".build/easyCUI.o"
+    ],
+    "directory": "/home/lynx/easyCUI",
+    "output": ".build/easyCUI.o"
+  },
+  {
+    "file": "src/main.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-O0",
+      "-DVERSION=0.1",
+      "-Iinclude",
+      "-MMD",
+      "-MP",
+      "-c",
+      "src/main.c",
+      "-o",
+      ".build/main.o"
+    ],
+    "directory": "/home/lynx/easyCUI",
+    "output": ".build/main.o"
+  }
+]
