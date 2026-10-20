@@ -1,5 +1,6 @@
 #include "str.h"
 #include "result.h"
+#include "debug.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,7 +9,7 @@ int _str_reserve(Str* str, size_t capacity);
 
 
 int _str_reserve(Str* str, size_t capacity) {
-  if (!str) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(str);
 
   if (str->capacity - str->length >= capacity) RES_RETURN(r_ENONE, 0);
 
@@ -25,7 +26,7 @@ int _str_reserve(Str* str, size_t capacity) {
 }
 
 int str_init(Str* str) {
-  if (!str) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(str);
 
   char* text = malloc(STR_INITIAL_CAPACITY);
   if (!text) RES_RETURN(r_EMEM, -1);
@@ -37,8 +38,17 @@ int str_init(Str* str) {
   RES_RETURN(r_ENONE, 0);
 }
 
+int str_init_cnstr(Str* str, const char* cstr, size_t length) {
+  if (str && cstr) RES_RETURN(r_ENULL_PTR, -1);
+  
+  if (str_init(str)) return -1;
+  if (str_cncat(str, cstr, length)) return -1;
+
+  RES_RETURN(r_ENONE, 0);
+}
+
 int str_init_cstr(Str* str, const char* cstr) {
-  if (!str || !cstr) RES_RETURN(r_ENULL_PTR, -1);
+  if (str && cstr) RES_RETURN(r_ENULL_PTR, -1);
   
   if (str_init(str)) return -1;
   if (str_ccat(str, cstr)) return -1;
@@ -47,7 +57,7 @@ int str_init_cstr(Str* str, const char* cstr) {
 }
 
 void str_free(Str* str) {
-  if (!str) return;
+  ASSERT(str);
 
   free(str->text);
 
@@ -55,7 +65,7 @@ void str_free(Str* str) {
 }
 
 int str_cmp(const Str* str, const Str* str2) {
-  if (!str || !str2) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(str && str2);
 
   if (str->length != str2->length) RES_RETURN(r_ENONE, 0);
 
@@ -67,8 +77,8 @@ int str_cmp(const Str* str, const Str* str2) {
 }
 
 int str_cmp_substr(const Str* str, const Str* substr, size_t startIndex) {
-  if (!str || !substr) RES_RETURN(r_ENULL_PTR, -1);
-  if (startIndex >= str->length) RES_RETURN(r_EBOUNDS, -1);
+  ASSERT(str && substr);
+  ASSERT(startIndex >= str->length);
 
   for (size_t i = 0; i < substr->length; i++) {
     if (str->text[i + startIndex] != substr->text[i]) RES_RETURN(r_ENONE, 0);
@@ -78,7 +88,7 @@ int str_cmp_substr(const Str* str, const Str* substr, size_t startIndex) {
 }
 
 int str_cat(Str* str, const Str* str2) {
-  if (!str || !str2) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(str && str2);
 
   if (_str_reserve(str, str2->length)) return -1;
 
@@ -89,8 +99,8 @@ int str_cat(Str* str, const Str* str2) {
 }
 
 int str_insert(Str* str, const Str* str2, size_t insertIndex) {
-  if (!str || !str2) RES_RETURN(r_ENULL_PTR, -1);
-  if (insertIndex > str->length) RES_RETURN(r_EBOUNDS, -1);
+  ASSERT(str && str2);
+  ASSERT(insertIndex > str->length);
 
   if (_str_reserve(str, str2->length)) return -1;
 
@@ -105,7 +115,7 @@ int str_insert(Str* str, const Str* str2, size_t insertIndex) {
 }
 
 int str_cncat(Str* str, const char* cstr2, size_t length) {
-  if (!str || !cstr2) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(str && cstr2);
 
   if (_str_reserve(str, length)) return -1;
 
@@ -116,7 +126,7 @@ int str_cncat(Str* str, const char* cstr2, size_t length) {
 }
 
 int str_ccat(Str* str, const char* cstr2) {
-  if (!str || !cstr2) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(str && cstr2);
 
   size_t cstr2Len = strlen(cstr2);
 
@@ -126,8 +136,8 @@ int str_ccat(Str* str, const char* cstr2) {
 }
 
 int str_cinsert(Str* str, const char* cstr2, size_t insertIndex) {
-  if (!str || !cstr2) RES_RETURN(r_ENULL_PTR, -1);
-  if (insertIndex > str->length) RES_RETURN(r_EBOUNDS, -1);
+  ASSERT(str && cstr2);
+  ASSERT(insertIndex <= str->length);
 
   size_t cstr2Len = strlen(cstr2);
 
@@ -141,7 +151,7 @@ int str_cinsert(Str* str, const char* cstr2, size_t insertIndex) {
 }
 
 int str_cstr(Str* str) {
-  if (!str) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(str);
 
   if (_str_reserve(str, 1)) return -1;
 
@@ -151,7 +161,7 @@ int str_cstr(Str* str) {
 }
 
 int str_clear(Str* str) {
-  if (!str) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(str);
 
   str->length = 0;
 
@@ -159,7 +169,7 @@ int str_clear(Str* str) {
 }
 
 int str_substr(Str* str, size_t startIndex, size_t length) {
-  if (!str) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(str);
 
   str->length -= length + startIndex;
   if (str->length != 0) {
@@ -170,8 +180,8 @@ int str_substr(Str* str, size_t startIndex, size_t length) {
 }
 
 int str_cut(Str* str, size_t startIndex, size_t length) {
-  if (!str) RES_RETURN(r_ENULL_PTR, -1);
-  if (startIndex + length > str->length) RES_RETURN(r_EBOUNDS, -1);
+  ASSERT(str);
+  ASSERT(startIndex + length <= str->length);
 
   memmove(str->text + startIndex, str->text + startIndex + length, str->length - length - startIndex);
   str->length -= length;
@@ -180,7 +190,7 @@ int str_cut(Str* str, size_t startIndex, size_t length) {
 }
 
 int str_cpy(Str* copy, const Str* src) {
-  if (!src || !copy) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(src && copy);
 
   if (str_clear(copy)) return -1;
   if (str_cat(copy, src)) return -1;
@@ -189,7 +199,7 @@ int str_cpy(Str* copy, const Str* src) {
 }
 
 int str_ccpy(Str* copy, const char* src) {
-  if (!src || !copy) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(src && copy);
 
   if (str_clear(copy)) return -1;
   if (str_ccat(copy, src)) return -1;
@@ -198,7 +208,7 @@ int str_ccpy(Str* copy, const char* src) {
 }
 
 int str_dup(Str* dup, const Str* src) {
-  if (!src || !dup) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(src && dup);
 
   *dup = *src;
 
@@ -211,7 +221,7 @@ int str_dup(Str* dup, const Str* src) {
 }
 
 int str_replace(Str* str, const Str* strPattern, const Str* strNew) {
-  if (!str || !strPattern || !strNew) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(str && strPattern && strNew);
 
   for (size_t i = 0; i < str->length; i++) {
     if (str_cmp_substr(str, strPattern, i)) {

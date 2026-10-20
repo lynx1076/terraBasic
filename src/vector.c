@@ -1,5 +1,6 @@
 #include "vector.h"
 #include "result.h"
+#include "debug.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -7,7 +8,8 @@
 
 
 int vec_init(Vec* vec, unsigned int elSize) {
-  if (vec == NULL) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(vec);
+  ASSERT(elSize);
 
   void* memory = malloc(elSize * VEC_INITIAL_CAP);
   if (memory == NULL) return r_EMEM;
@@ -21,17 +23,20 @@ int vec_init(Vec* vec, unsigned int elSize) {
 }
 
 bool vec_is_init(Vec* vec) {
+  ASSERT(vec);
+
   return vec->memory != NULL;
 }
 
 void vec_free(Vec* vec) {
-  if (vec == NULL) return;
+  ASSERT(vec);
   
   free(vec->memory);
   *vec = VEC_EMPTY;
 }
 
 static int vec_update_capacity(Vec* vec) {
+  ASSERT(vec);
   size_t new_cap;
 
   if (vec->count >= vec->capacity) {
@@ -53,8 +58,8 @@ static int vec_update_capacity(Vec* vec) {
 }
 
 int vec_push(Vec* vec, void* el) {
-  if (vec == NULL) RES_RETURN(r_ENULL_PTR, -1);
-  if (el == NULL) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(vec);
+  ASSERT(el);
 
   if (vec_update_capacity(vec)) return -1;
 
@@ -65,9 +70,9 @@ int vec_push(Vec* vec, void* el) {
 }
 
 int vec_push_to(Vec* vec, size_t index, void* el) {
-  if (vec == NULL) RES_RETURN(r_ENULL_PTR, -1);
-  if (el == NULL) RES_RETURN(r_ENULL_PTR, -1);
-  if (index > vec->count) RES_RETURN(r_EBOUNDS, -1);
+  ASSERT(vec);
+  ASSERT(el);
+  ASSERT(index <= vec->count);
 
   if (vec_update_capacity(vec)) return -1;
 
@@ -81,7 +86,8 @@ int vec_push_to(Vec* vec, size_t index, void* el) {
 }
 
 int vec_pop(Vec* vec, void* el) {
-  if (vec == NULL) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(vec);
+  ASSERT(el);
 
   if (el) memcpy(el, (char*)vec->memory + (vec->count - 1) * vec->elSize, vec->elSize);
   vec->count--;
@@ -90,8 +96,8 @@ int vec_pop(Vec* vec, void* el) {
 }
 
 int vec_pop_at(Vec* vec, size_t index, void* el) {
-  if (vec == NULL) RES_RETURN(r_ENULL_PTR, -1);
-  if (index >= vec->count) RES_RETURN(r_EBOUNDS, -1);
+  ASSERT(vec);
+  ASSERT(index < vec->count);
 
   char* base = (char*)vec->memory;
 
@@ -103,14 +109,14 @@ int vec_pop_at(Vec* vec, size_t index, void* el) {
 }
 
 void* vec_get(Vec* vec, size_t index) {
-  if (vec == NULL) RES_RETURN(r_ENULL_PTR, NULL);
+  ASSERT(vec);
 
   if (index >= vec->count) RES_RETURN(r_EBOUNDS, NULL);
   RES_RETURN(r_ENONE, (char*)vec->memory + index * vec->elSize);
 }
 
 int vec_clear(Vec* vec) {
-  if (vec == NULL) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(vec);
 
   vec->count = 0;
   if (vec_update_capacity(vec)) return -1;

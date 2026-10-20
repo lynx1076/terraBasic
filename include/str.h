@@ -13,6 +13,7 @@ typedef struct {
 } Str;
 
 int str_init(Str* str);
+int str_init_cnstr(Str* str, const char* cstr, size_t length);
 int str_init_cstr(Str* str, const char* cstr);
 void str_free(Str* str);
 
