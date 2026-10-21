@@ -2,7 +2,7 @@ PROJNAME = terraBasic
 VERSION = 0.1
 
 CC = gcc
-CFLAGS = -Wall -Wextra -g -O0 -DVERSION="$(VERSION)"
+CFLAGS = -Wall -Wextra -g -O0 -DVERSION="$(VERSION)" -DDEBUG
 CPPFLAGS =
 LDFLAGS =
 LDLIBS = -lraylib -lpthread -lm
