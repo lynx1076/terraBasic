@@ -39,7 +39,7 @@ int str_init(Str* str) {
 }
 
 int str_init_cnstr(Str* str, const char* cstr, size_t length) {
-  if (str && cstr) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(str && cstr);
   
   if (str_init(str)) return -1;
   if (str_cncat(str, cstr, length)) return -1;
@@ -48,7 +48,7 @@ int str_init_cnstr(Str* str, const char* cstr, size_t length) {
 }
 
 int str_init_cstr(Str* str, const char* cstr) {
-  if (str && cstr) RES_RETURN(r_ENULL_PTR, -1);
+  ASSERT(str && cstr);
   
   if (str_init(str)) return -1;
   if (str_ccat(str, cstr)) return -1;

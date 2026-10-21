@@ -1,8 +1,8 @@
-PROJNAME = terraTree
+PROJNAME = terraBasic
 VERSION = 0.1
 
 CC = gcc
-CFLAGS = -Wall -Wextra -g -O3 -DVERSION="$(VERSION)"
+CFLAGS = -Wall -Wextra -g -O0 -DVERSION="$(VERSION)"
 CPPFLAGS =
 LDFLAGS =
 LDLIBS = -lraylib -lpthread -lm
