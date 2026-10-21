@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include <raylib.h>
+#include <stddef.h>
 
 
 #define DEG_TO_RAD(DEG)         (DEG * PI / 180)
@@ -19,5 +20,7 @@ float Lerpf(float a, float b, float x);
 Vector2 LerpV2(Vector2 a, Vector2 b, float x);
 
 void PrintVector(Vector2 v);
+
+int strncicmp(const char* str1, const char* str2, size_t length);
 
 #endif

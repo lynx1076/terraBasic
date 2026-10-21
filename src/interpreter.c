@@ -1,6 +1,8 @@
 #include "interpreter.h"
 #include "debug.h"
 #include "result.h"
+#include "vector.h"
+#include "tokens.h"
 #include <stddef.h>
 
 void var_free(ItpVar* var);
@@ -41,8 +43,13 @@ int itp_interpret(Itp* itp, Vec* tokens, char** errorString) {
 
   if (!tokens->count) RES_RETURN(r_ENONE, 0);
 
+  if (tokens->count == 0) return -1;
 
-  if (vec_get(tokens, 0)) return -1;
+  Token* token = vec_get(tokens, 0);
+
+  if (token->type == tt_Keyword) {
+    
+  }
 
   RES_RETURN(r_ENONE, 0);
 }

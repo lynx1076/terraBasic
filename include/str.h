@@ -36,4 +36,7 @@ int str_ccpy(Str* copy, const char* src);
 int str_dup(Str* dup, const Str* str);
 int str_replace(Str* str, const Str* strPattern, const Str* strNew);
 
+void str_to_upper(Str* str);
+void str_to_lower(Str* str);
+
 #endif

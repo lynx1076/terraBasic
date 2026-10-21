@@ -1,6 +1,6 @@
 [
   {
-    "file": "src/easyCUI.c",
+    "file": "src/interpreter.c",
     "arguments": [
       "/usr/bin/gcc",
       "-Wall",
@@ -8,35 +8,16 @@
       "-g",
       "-O0",
       "-DVERSION=0.1",
+      "-DDEBUG",
       "-Iinclude",
       "-MMD",
       "-MP",
       "-c",
-      "src/easyCUI.c",
+      "src/interpreter.c",
       "-o",
-      ".build/easyCUI.o"
+      ".build/interpreter.o"
     ],
-    "directory": "/home/lynx/easyCUI",
-    "output": ".build/easyCUI.o"
-  },
-  {
-    "file": "src/main.c",
-    "arguments": [
-      "/usr/bin/gcc",
-      "-Wall",
-      "-Wextra",
-      "-g",
-      "-O0",
-      "-DVERSION=0.1",
-      "-Iinclude",
-      "-MMD",
-      "-MP",
-      "-c",
-      "src/main.c",
-      "-o",
-      ".build/main.o"
-    ],
-    "directory": "/home/lynx/easyCUI",
-    "output": ".build/main.o"
+    "directory": "/home/lynx/terraBasic",
+    "output": ".build/interpreter.o"
   }
 ]

@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
   const char* error;
   Str line;
 
-  if (str_init_cstr(&line, "1.2, ( 12 3)\"Hallo test string\"")) return _res;
+  if (str_init_cstr(&line, "goto 20 var lEt x = 0")) return _res;
   str_cstr(&line);
   printf("Processing string (%zu): %s\n", line.length, line.text);
 

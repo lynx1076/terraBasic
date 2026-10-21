@@ -1,6 +1,7 @@
 #include "str.h"
 #include "result.h"
 #include "debug.h"
+#include <ctype.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -232,5 +233,21 @@ int str_replace(Str* str, const Str* strPattern, const Str* strNew) {
   }
 
   RES_RETURN(r_ENONE, 0);
+}
+
+void str_to_upper(Str* str) {
+  ASSERT(str);
+
+  for (size_t i = 0; i < str->length; i++) {
+    str->text[i] = toupper(str->text[i]);
+  }
+}
+
+void str_to_lower(Str* str) {
+  ASSERT(str);
+
+  for (size_t i = 0; i < str->length; i++) {
+    str->text[i] = tolower(str->text[i]);
+  }
 }
 

@@ -1,21 +1,18 @@
 #include "tokens.h"
 #include "debug.h"
 #include "result.h"
+#include "str.h"
+#include "utils.h"
 #include <stdio.h>
+#include <string.h>
 
-
-int tok_init(Token* token, TokenType type, const char* text, size_t length) {
-  ASSERT(token && text);
-
-  if (str_init_cnstr(&token->string, text, length)) return -1;
-
-  token->type = type;
-
-  RES_RETURN(r_ENONE, 0);
-}
 
 void tok_free(Token* token) {
-  str_free(&token->string);
+  ASSERT(token);
+
+  if (token->type == tt_String || token->type == tt_Identifier) {
+    str_free(&token->string);
+  }
 }
 
 char* tok_get_type_cstr(TokenType type) {
@@ -30,8 +27,11 @@ char* tok_get_type_cstr(TokenType type) {
   CASE(tt_LParen);
   CASE(tt_RParen);
   CASE(tt_Operator);
+  CASE(tt_Keyword);
+  CASE(tt_Equals);
   default:
   CASE(tt_Unknown);
+#undef CASE
   }
 }
 
@@ -41,7 +41,36 @@ void tok_print(Token* token) {
     return;
   }
 
-  str_cstr(&token->string);
-  printf("%s => \"%s\"", tok_get_type_cstr(token->type), token->string.text);
+  switch (token->type) {
+    case tt_Identifier:
+    case tt_String: {
+      str_cstr(&token->string);
+      printf("%s => \"%s\"", tok_get_type_cstr(token->type), token->string.text);
+    } break;
+    default: {
+      printf("%s", tok_get_type_cstr(token->type));
+    } break;
+  }
+}
+
+TokenKeyword tok_get_keyword(const char* cstr, size_t len) {
+  ASSERT(cstr);
+  
+  if (!len) RES_RETURN(r_ENONE, tk_None);
+  
+  #define TEST(KEYWORD, TOKEN_KEYWORD)   if (!strncicmp((KEYWORD), cstr, len)) RES_RETURN(r_ENONE, (TOKEN_KEYWORD));
+
+  TEST(KEYWORD_LET, tk_Let);
+  TEST(KEYWORD_PRINT, tk_Print);
+  TEST(KEYWORD_INPUT, tk_Input);
+  TEST(KEYWORD_GOTO, tk_Goto);
+  TEST(KEYWORD_GOSUB, tk_Gosub);
+  TEST(KEYWORD_RETURN, tk_Return);
+  TEST(KEYWORD_END, tk_End);
+  TEST(KEYWORD_IF, tk_If);
+  TEST(KEYWORD_THEN, tk_Then);
+  TEST(KEYWORD_REM, tk_Remark);
+
+  RES_RETURN(r_ENONE, tk_None);
 }
 

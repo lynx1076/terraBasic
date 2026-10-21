@@ -1,10 +1,12 @@
 #include "lexer.h"
 #include "result.h"
+#include "str.h"
 #include "tokens.h"
 #include "result.h"
 #include "debug.h"
 #include <ctype.h>
 #include <stddef.h>
+#include <stdio.h>
 
 typedef struct {
   const Str* line;
@@ -48,12 +50,14 @@ void _skip_whitespace(LexerState* lstate) {
 }
 
 int lxr_LexLine(Vec* tokens, const char** error_string, const Str* line) {
-  ASSERT(!tokens || !line);
+  ASSERT(tokens);
+  ASSERT(line);
 
   LexerState lstate = {
     .line = line,
     .index = 0,
   };
+
 
   if (error_string) *error_string = "Unknown error";
 
@@ -61,16 +65,18 @@ int lxr_LexLine(Vec* tokens, const char** error_string, const Str* line) {
     char c = _get_cursor(&lstate, 0);
 
     size_t tokenStart = lstate.index;
-    size_t tokenEnd = lstate.index;
-    TokenType type = tt_None;
+    Token token;
 
     if (isalpha(c)) {
       while (isalnum(c) && !_eol_reached(&lstate)) c = _move_cursor(&lstate, 1);
-      tokenEnd = lstate.index;
 
       _move_cursor(&lstate, -1);
       
-      type = tt_Identifier;
+      token.keyword = tok_get_keyword(lstate.line->text + tokenStart, lstate.index - tokenStart);
+      if (token.keyword != tk_None) {
+        token.type = tt_Keyword;
+      }
+      else token.type = tt_Identifier;
     } else if (isdigit(c)) {
       bool hadDecimalPoint = false;
       while (isdigit(c) || (c == SIGCHAR_DECIMAL_POINT && !hadDecimalPoint)) {
@@ -85,10 +91,9 @@ int lxr_LexLine(Vec* tokens, const char** error_string, const Str* line) {
         if (_eol_reached(&lstate)) break;
       }
 
-      tokenEnd = lstate.index;
       _move_cursor(&lstate, -1);
 
-      type = tt_Number;
+      token.type = tt_Number;
     } else if (c == SIGCHAR_STRING_BOUNDARY) {
       tokenStart++;
       do {
@@ -99,38 +104,39 @@ int lxr_LexLine(Vec* tokens, const char** error_string, const Str* line) {
         c = _move_cursor(&lstate, 1);
       } while (c != SIGCHAR_STRING_BOUNDARY);
 
-      tokenEnd = lstate.index;
-      type = tt_String;
+      token.type = tt_String;
     } else if (isspace(c)) {
       _skip_whitespace(&lstate);
-      type = tt_None;
+      token.type = tt_None;
     } else {
       switch (c) {
-      case TOKCHAR_COMMA: type = tt_Comma; break;
-      case TOKCHAR_LPAREN: type = tt_LParen; break;
-      case TOKCHAR_RPAREN: type = tt_RParen; break;
-      case TOKCHAR_OP_PLUS: type = tt_Operator; break;
-      case TOKCHAR_OP_MINUS: type = tt_Operator; break;
-      case TOKCHAR_OP_MULT: type = tt_Operator; break;
-      case TOKCHAR_OP_DIV: type = tt_Operator; break;
-      case TOKCHAR_OP_POW: type = tt_Operator; break;
+      case TOKCHAR_COMMA: token.type = tt_Comma; break;
+      case TOKCHAR_EQUALS: token.type = tt_Equals; break;
+      case TOKCHAR_LPAREN: token.type = tt_LParen; break;
+      case TOKCHAR_RPAREN: token.type = tt_RParen; break;
+
+      case TOKCHAR_OP_PLUS: token.type = tt_Operator; break;
+      case TOKCHAR_OP_MINUS: token.type = tt_Operator; break;
+      case TOKCHAR_OP_MULT: token.type = tt_Operator; break;
+      case TOKCHAR_OP_DIV: token.type = tt_Operator; break;
+      case TOKCHAR_OP_POW: token.type = tt_Operator; break;
       default: {
         if (error_string) *error_string = "Unexpected character discovered";
         RES_RETURN(r_EPARSE, -1);
       }
       }
-
-      tokenEnd = lstate.index + 1;
     }
 
-    switch (type) {
+    switch (token.type) {
     case tt_None: break;
     case tt_Unknown: {
       *error_string = "Encountered an unknown token";
     } RES_RETURN(r_EPARSE, -1);
+    case tt_String:
+    case tt_Identifier: {
+      if (str_init_cnstr(&token.string, lstate.line->text + tokenStart, lstate.index - tokenStart + 1)) return -1;
+    } // Fall through
     default: {
-      Token token;
-      if (tok_init(&token, type, lstate.line->text + tokenStart, tokenEnd - tokenStart)) return -1;
       if (vec_push(tokens, &token)) return -1;
     } break;
     }
