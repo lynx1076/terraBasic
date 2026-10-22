@@ -1,15 +1,25 @@
 #include "interpreter.h"
 #include "debug.h"
 #include "result.h"
+#include "str.h"
 #include "vector.h"
 #include "tokens.h"
 #include <stddef.h>
 
 void var_free(ItpVar* var);
+int _interpret_keyword(Itp* itp);
+
+int itp_line_init(ItpLine* line, Str* text, size_t line_num) {
+  ASSERT(line);
+}
 
 
 void var_free(ItpVar* var) {
     
+}
+
+int _interpret_keyword(Itp* itp, Token* token) {
+  
 }
 
 int itp_init(Itp* itp) {
@@ -48,7 +58,7 @@ int itp_interpret(Itp* itp, Vec* tokens, char** errorString) {
   Token* token = vec_get(tokens, 0);
 
   if (token->type == tt_Keyword) {
-    
+    if (_interpret_keyword(itp, token)) return -1;
   }
 
   RES_RETURN(r_ENONE, 0);

@@ -15,6 +15,12 @@ typedef struct {
 } ItpVar;
 
 typedef struct {
+  size_t line_num;
+  Str text;
+  Vec tokens;
+} ItpLine;
+
+typedef struct {
   size_t lineIndex;
   Vec lines;
   Vec variables;
