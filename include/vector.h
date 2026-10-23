@@ -61,6 +61,12 @@ int vec_pop_at(Vec* vec, size_t index, void* el);
 void* vec_get(Vec* vec, size_t index);
 
 /**
+ * Get a pointer to the element at the end
+ * Returns NULL if the index is invalid
+ */
+void* vec_get_last(Vec* vec);
+
+/**
  * Sets the count to 0
  */
 int vec_clear(Vec* vec);

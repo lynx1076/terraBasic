@@ -20,7 +20,8 @@ char* tok_get_type_cstr(TokenType type) {
 #define CASE(X) case X: return (char*)#X + 3
   CASE(tt_None);
   CASE(tt_Identifier);
-  CASE(tt_Number);
+  CASE(tt_Float);
+  CASE(tt_Long);
   CASE(tt_Comma);
   CASE(tt_Dot);
   CASE(tt_String);
@@ -47,6 +48,15 @@ void tok_print(Token* token) {
       str_cstr(&token->string);
       printf("%s => \"%s\"", tok_get_type_cstr(token->type), token->string.text);
     } break;
+    case tt_Keyword: {
+      printf("%s => %s", tok_get_type_cstr(token->type), tok_tk_get_cstr(token->keyword));
+    } break;
+    case tt_Float: {
+      printf("%s => %f", tok_get_type_cstr(token->type), token->_float);
+    } break;
+    case tt_Long: {
+      printf("%s => %li", tok_get_type_cstr(token->type), token->_long);
+    } break;
     default: {
       printf("%s", tok_get_type_cstr(token->type));
     } break;
@@ -72,5 +82,24 @@ TokenKeyword tok_get_keyword(const char* cstr, size_t len) {
   TEST(KEYWORD_REM, tk_Remark);
 
   RES_RETURN(r_ENONE, tk_None);
+}
+
+char* tok_tk_get_cstr(TokenKeyword tk) {
+  #define CASE(KEYWORD)   case (KEYWORD): return (char*)(#KEYWORD) + 3
+
+  switch (tk) {
+  CASE(tk_Let);
+  CASE(tk_Print);
+  CASE(tk_Input);
+  CASE(tk_Goto);
+  CASE(tk_Gosub);
+  CASE(tk_Return);
+  CASE(tk_End);
+  CASE(tk_If);
+  CASE(tk_Then);
+  CASE(tk_Remark);
+  CASE(tk_None);
+  default: "Unknown";
+  }
 }
 

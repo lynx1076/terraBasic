@@ -115,6 +115,16 @@ void* vec_get(Vec* vec, size_t index) {
   RES_RETURN(r_ENONE, (char*)vec->memory + index * vec->elSize);
 }
 
+void* vec_get_last(Vec* vec) {
+  ASSERT(vec);
+
+  if (!vec->count) RES_RETURN(r_EBOUNDS, NULL);
+
+  size_t index = vec->count - 1;
+
+  RES_RETURN(r_ENONE, (char*)vec->memory + index * vec->elSize);
+}
+
 int vec_clear(Vec* vec) {
   ASSERT(vec);
 

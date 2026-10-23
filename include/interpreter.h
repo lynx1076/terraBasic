@@ -30,6 +30,7 @@ typedef struct {
 int itp_init(Itp* itp);
 void itp_free(Itp* itp);
 
-int itp_line_add(ItpLine* line, const Str* text, size_t line_num);
+int itp_line_add(Itp* itp, const Str* text, size_t line_num);
+int itp_print_line(Itp* itp, size_t line_num);
 
 #endif

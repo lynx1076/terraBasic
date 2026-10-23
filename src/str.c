@@ -239,6 +239,7 @@ int str_dup(Str* dup, const Str* src) {
 
   char* newBuff = malloc(src->capacity);
   if (!newBuff) RES_RETURN(r_EMEM, -1);
+  memcpy(newBuff, src->text, src->length);
   
   dup->text = newBuff;
 

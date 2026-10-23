@@ -1,7 +1,9 @@
 #include <raylib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include "interpreter.h"
 #include "result.h"
+#include "str.h"
 #include "vector.h"
 #include "tokens.h"
 #include "lexer.h"
@@ -18,24 +20,20 @@ int main(int argc, char** argv) {
   Vec tokens;
   if (vec_init(&tokens, sizeof(Token))) return _res;
 
-  const char* error;
+  Str error;
   Str line;
 
-  if (str_init_cstr(&line, "goto 20 var lEt x = 0")) return _res;
+  if (str_init_cstr(&error, "Unknown error")) return _res;
+
+  if (str_init_cstr(&line, "goto 20 var lEt x = 0 20.1a*b")) return _res;
   str_cstr(&line);
   printf("Processing string (%zu): %s\n", line.length, line.text);
 
-  if (lxr_LexLine(&tokens, &error, &line)) {
-    printf("%s\n", error);
-  } else {
-    for (size_t i = 0; i < tokens.count; i++) {
-      Token* token = vec_get(&tokens, i);
-      printf("(%zu): ", i);
-      tok_print(token);
-      printf("\n");
-    }
-  }
+  Itp itp;
+  if (itp_init(&itp)) return _res;
 
+  if (itp_line_add(&itp, &line, 1)) return _res;
+  if (itp_print_line(&itp, 1)) return _res;
 
   return 0;
 

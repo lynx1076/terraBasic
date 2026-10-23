@@ -4,6 +4,7 @@
 #include "tokens.h"
 #include "result.h"
 #include "debug.h"
+#include "utils.h"
 #include <ctype.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -59,8 +60,6 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
   };
 
 
-  if (error_string) str_cpy_cstr(error_string, "Unknown error");
-
   while (!_eol_reached(&lstate)) {
     char c = _get_cursor(&lstate, 0);
 
@@ -93,7 +92,15 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
 
       _move_cursor(&lstate, -1);
 
-      token.type = tt_Number;
+      if (hadDecimalPoint) {
+        token.type = tt_Float;
+
+        if (ParseFloat(&token._float, lstate.line->text + tokenStart, lstate.index - tokenStart + 1)) return -1;
+      } else {
+        token.type = tt_Long;
+
+        if (ParseLong(&token._long, lstate.line->text + tokenStart, lstate.index - tokenStart + 1)) return -1;
+      }
     } else if (c == SIGCHAR_STRING_BOUNDARY) {
       tokenStart++;
       do {

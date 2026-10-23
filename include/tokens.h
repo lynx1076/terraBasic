@@ -34,7 +34,8 @@ typedef enum {
   tt_Unknown,
   tt_None,
   tt_Identifier,
-  tt_Number,
+  tt_Float,
+  tt_Long,
   tt_Comma,
   tt_Dot,
   tt_String,
@@ -73,7 +74,8 @@ typedef struct {
   union {
     TokenOperator operator;
     TokenKeyword keyword;
-    float value;
+    float _float;
+    long _long;
     Str string;
   };
 } Token;
@@ -83,5 +85,6 @@ void tok_free(Token* token);
 char* tok_get_type_cstr(TokenType type);
 void tok_print(Token* token);
 TokenKeyword tok_get_keyword(const char* cstr, size_t len);
+char* tok_tk_get_cstr(TokenKeyword tk);
 
 #endif
