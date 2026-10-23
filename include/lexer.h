@@ -4,6 +4,6 @@
 #include "str.h"
 #include "vector.h"
 
-int lxr_LexLine(Vec* tokens, const char** error_string, const Str* line);
+int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line);
 
 #endif

@@ -24,11 +24,12 @@ typedef struct {
   size_t lineIndex;
   Vec lines;
   Vec variables;
+  Str errorString;
 } Itp;
 
 int itp_init(Itp* itp);
 void itp_free(Itp* itp);
 
-int itp_interpret(Itp* itp, Vec* tokens, char** errorString);
+int itp_line_add(ItpLine* line, const Str* text, size_t line_num);
 
 #endif

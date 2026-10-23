@@ -49,7 +49,7 @@ void _skip_whitespace(LexerState* lstate) {
   _move_cursor(lstate, -1);
 }
 
-int lxr_LexLine(Vec* tokens, const char** error_string, const Str* line) {
+int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
   ASSERT(tokens);
   ASSERT(line);
 
@@ -59,7 +59,7 @@ int lxr_LexLine(Vec* tokens, const char** error_string, const Str* line) {
   };
 
 
-  if (error_string) *error_string = "Unknown error";
+  if (error_string) str_cpy_cstr(error_string, "Unknown error");
 
   while (!_eol_reached(&lstate)) {
     char c = _get_cursor(&lstate, 0);
@@ -82,7 +82,7 @@ int lxr_LexLine(Vec* tokens, const char** error_string, const Str* line) {
       while (isdigit(c) || (c == SIGCHAR_DECIMAL_POINT && !hadDecimalPoint)) {
         if (c == SIGCHAR_DECIMAL_POINT) {
           if (hadDecimalPoint) {
-            if (error_string) *error_string = "Number may not have multiple decimal points";
+            if (error_string) str_cpy_cstr(error_string, "Number may not have multiple decimal points");
             RES_RETURN(r_ELEX, -1);
           }
           hadDecimalPoint = true;
@@ -98,7 +98,7 @@ int lxr_LexLine(Vec* tokens, const char** error_string, const Str* line) {
       tokenStart++;
       do {
         if (_eol_reached(&lstate)) {
-          if (error_string) *error_string = "String was not terminated";
+          if (error_string) str_cpy_cstr(error_string, "String was not terminated");
           RES_RETURN(r_EPARSE, -1);
         }
         c = _move_cursor(&lstate, 1);
@@ -121,7 +121,7 @@ int lxr_LexLine(Vec* tokens, const char** error_string, const Str* line) {
       case TOKCHAR_OP_DIV: token.type = tt_Operator; break;
       case TOKCHAR_OP_POW: token.type = tt_Operator; break;
       default: {
-        if (error_string) *error_string = "Unexpected character discovered";
+        if (error_string) str_cpy_cstr(error_string, "Unexpected character discovered");
         RES_RETURN(r_EPARSE, -1);
       }
       }
@@ -130,7 +130,7 @@ int lxr_LexLine(Vec* tokens, const char** error_string, const Str* line) {
     switch (token.type) {
     case tt_None: break;
     case tt_Unknown: {
-      *error_string = "Encountered an unknown token";
+      if (error_string) str_cpy_cstr(error_string, "Encountered an unknown token");
     } RES_RETURN(r_EPARSE, -1);
     case tt_String:
     case tt_Identifier: {

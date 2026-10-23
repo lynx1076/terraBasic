@@ -3,8 +3,10 @@
 #include "debug.h"
 #include <ctype.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 int _str_reserve(Str* str, size_t capacity);
 
@@ -161,6 +163,28 @@ int str_cstr(Str* str) {
   RES_RETURN(r_ENONE, 0);
 }
 
+int str_fmt_cstr(Str* str, char* fmt, ...) {
+  ASSERT(str);
+  ASSERT(fmt);
+
+  va_list va;
+
+  va_start(va, fmt);
+
+  char* buff;
+  int len = vasprintf(&buff, fmt, va);
+  if (len < 0) RES_RETURN(r_EUNKNOWN, -1);
+  va_end(va);
+
+  free(str->text);
+
+  str->text = buff;
+  str->capacity = len + 1;
+  str->length = len;
+
+  RES_RETURN(r_ENONE, 0);
+}
+
 int str_clear(Str* str) {
   ASSERT(str);
 
@@ -199,7 +223,7 @@ int str_cpy(Str* copy, const Str* src) {
   RES_RETURN(r_ENONE, 0);
 }
 
-int str_ccpy(Str* copy, const char* src) {
+int str_cpy_cstr(Str* copy, const char* src) {
   ASSERT(src && copy);
 
   if (str_clear(copy)) return -1;

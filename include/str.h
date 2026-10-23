@@ -28,11 +28,13 @@ int str_ccat(Str* str, const char* cstr2);
 int str_cinsert(Str* str, const char* cstr2, size_t insertIndex);
 int str_cstr(Str* str);
 
+int str_fmt_cstr(Str* str, char* fmt, ...);
+
 int str_clear(Str* str);
 int str_substr(Str* str, size_t startIndex, size_t length);
 int str_cut(Str* str, size_t startIndex, size_t length);
 int str_cpy(Str* copy, const Str* src);
-int str_ccpy(Str* copy, const char* src);
+int str_cpy_cstr(Str* copy, const char* src);
 int str_dup(Str* dup, const Str* str);
 int str_replace(Str* str, const Str* strPattern, const Str* strNew);
 

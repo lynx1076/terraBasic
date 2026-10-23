@@ -1,8 +1,14 @@
 #include "utils.h"
 #include "debug.h"
+#include "result.h"
 #include <ctype.h>
 #include <raylib.h>
+#include <errno.h>
+#include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
 
 float GetRandomFloat() {
   return (float)GetRandomValue(0, 1000000) / 1000000.0f;
@@ -45,5 +51,21 @@ int strncicmp(const char* str1, const char* str2, size_t length) {
   if (!length) return 0;
   if (*str1 > *str2) return 1;
   return -1;
+}
+
+int ParseLong(char* str, size_t length, int* value) {
+  ASSERT(str);
+  ASSERT(value);
+
+  errno = 0;
+
+  char* end = str + length;
+
+  long val = strtol(str, &end, 10);
+
+  if (end != str + length) RES_RETURN(r_EPARSE, -1);
+  if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) || (errno != 0 && val == 0)) RES_RETURN(r_EPARSE, -1);
+
+  RES_RETURN(r_ENONE, 0);
 }
 
