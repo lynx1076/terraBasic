@@ -2,6 +2,7 @@
 #include "debug.h"
 #include "result.h"
 #include "interpreter.h"
+#include "str.h"
 #include "tokens.h"
 #include "vector.h"
 #include <stddef.h>
@@ -56,18 +57,30 @@ int _evl_get_rpn(Itp* itp, size_t start, Vec* rpn) {
       printf("Stack: %zu, op: %s\n", stack_precedence, tok_get_operator_cstr(stack_operator));
       printf("Token: %zu, op: %s\n", token_precedence, tok_get_operator_cstr(token_operator));
 
-      if (stack_precedence > token_precedence) {
+      if (token->operator == to_RParen) {
+        while (stackToken && stackToken->operator != to_LParen) {
+          printf("Paren token ");
+          tok_print(stackToken);
+          printf("\n");
+          
+          vec_pop(&stack, &stackToken);
+          if (vec_push(&queue, &stackToken)) return -1;
+          stackToken = vec_get_last(&stack);
+        }
+        vec_pop(&stack, &stackToken);
+        if (stack.count == 0 && stackToken->operator != to_LParen) {
+          if (str_cpy_cstr(&itp->errorString, "Missing opening parenthesis")) return -1;
+        }
+      } else if (stack_precedence > token_precedence) {
         TokenOperator tmpop = token_operator;
         token_operator = stack_operator;
         stack_operator = tmpop;
 
-        Token stackToken;
-
-        if (vec_pop(&stack, &stackToken)) return -1;
-        if (vec_push(&queue, &stackToken)) return -1;
+        if (vec_pop(&stack, stackToken)) return -1;
+        if (vec_push(&queue, stackToken)) return -1;
         if (vec_push(&stack, token)) return -1;
         printf("Switch out ");
-        tok_print(&stackToken);
+        tok_print(stackToken);
         printf(" with ");
         tok_print(token);
         printf("\n");
@@ -93,6 +106,9 @@ int _evl_get_rpn(Itp* itp, size_t start, Vec* rpn) {
     Token tok;
     vec_pop(&stack, &tok);
     if (vec_push(&queue, &tok)) return -1;
+    if (tok.operator == to_LParen) {
+      if (str_cpy_cstr(&itp->errorString, "Missing closing parenthesis")) return -1;
+    }
   }
 
   for (size_t i = 0; i < queue.count; i++) {

@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
 
   if (str_init_cstr(&error, "Unknown error")) return _res;
 
-  if (str_init_cstr(&line, "a = 20 * 2 + 3 * 4")) return _res;
+  if (str_init_cstr(&line, "a = 20 * 2 + 3 * 4 * (7 + 1)")) return _res;
   str_cstr(&line);
   printf("Processing string (%zu): %s\n", line.length, line.text);
 
