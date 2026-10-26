@@ -5,7 +5,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -g -O0 -DVERSION="$(VERSION)" -DDEBUG
 CPPFLAGS =
 LDFLAGS =
-LDLIBS = -lraylib -lpthread -lm
+LDLIBS = -lm
 
 BUILD_DIR = .build
 

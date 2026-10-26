@@ -29,7 +29,6 @@ char* tok_get_type_cstr(TokenType type) {
   CASE(tt_RParen);
   CASE(tt_Operator);
   CASE(tt_Keyword);
-  CASE(tt_Equals);
   default:
   CASE(tt_Unknown);
 #undef CASE
@@ -43,6 +42,9 @@ void tok_print(Token* token) {
   }
 
   switch (token->type) {
+    case tt_Operator: {
+      printf("%s => \"%s\"", tok_get_type_cstr(token->type), tok_get_operator_cstr(token->operator));
+    } break;
     case tt_Identifier:
     case tt_String: {
       str_cstr(&token->string);
@@ -60,6 +62,15 @@ void tok_print(Token* token) {
     default: {
       printf("%s", tok_get_type_cstr(token->type));
     } break;
+  }
+}
+
+const char* tok_get_operator_cstr(TokenOperator op) {
+  switch (op) {
+#define X(TOK_OP, TOK_ENUM) case TOK_ENUM: return TOK_OP;
+    TOK_OPS
+#undef X
+    default: return "UNKNOWN";
   }
 }
 
@@ -99,7 +110,29 @@ char* tok_tk_get_cstr(TokenKeyword tk) {
   CASE(tk_Then);
   CASE(tk_Remark);
   CASE(tk_None);
-  default: "Unknown";
+  default: return "Unknown";
+  }
+}
+
+int tok_get_operator_precedence(TokenOperator op) {
+  switch (op) {
+    case to_Plus:
+    case to_Minus:
+      return 10;
+    case to_Mult:
+    case to_Div:
+      return 20;
+    case to_Pow:
+      return 30;
+    case to_CmpEq:
+    case to_CmpL:
+    case to_CmpG:
+    case to_CmpLT:
+    case to_CmpGT:
+      return 100;
+    case to_None:
+    default:
+      return 0;
   }
 }
 

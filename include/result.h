@@ -18,6 +18,7 @@
   X(r_ETIMEOUT) \
   X(r_EBOUNDS) \
   X(r_EARGS) \
+  X(r_EINTERPRET) \
   X(r_EDEVICE) \
   X(r_EPAYLOAD_SIZE) \
   X(r_ENOT_INIT) \

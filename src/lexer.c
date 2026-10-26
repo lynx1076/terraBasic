@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 typedef struct {
   const Str* line;
@@ -81,7 +82,7 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
       while (isdigit(c) || (c == SIGCHAR_DECIMAL_POINT && !hadDecimalPoint)) {
         if (c == SIGCHAR_DECIMAL_POINT) {
           if (hadDecimalPoint) {
-            if (error_string) str_cpy_cstr(error_string, "Number may not have multiple decimal points");
+            str_cpy_cstr(error_string, "Number may not have multiple decimal points");
             RES_RETURN(r_ELEX, -1);
           }
           hadDecimalPoint = true;
@@ -105,7 +106,7 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
       tokenStart++;
       do {
         if (_eol_reached(&lstate)) {
-          if (error_string) str_cpy_cstr(error_string, "String was not terminated");
+          str_cpy_cstr(error_string, "String was not terminated");
           RES_RETURN(r_EPARSE, -1);
         }
         c = _move_cursor(&lstate, 1);
@@ -116,28 +117,20 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
       _skip_whitespace(&lstate);
       token.type = tt_None;
     } else {
-      switch (c) {
-      case TOKCHAR_COMMA: token.type = tt_Comma; break;
-      case TOKCHAR_EQUALS: token.type = tt_Equals; break;
-      case TOKCHAR_LPAREN: token.type = tt_LParen; break;
-      case TOKCHAR_RPAREN: token.type = tt_RParen; break;
-
-      case TOKCHAR_OP_PLUS: token.type = tt_Operator; break;
-      case TOKCHAR_OP_MINUS: token.type = tt_Operator; break;
-      case TOKCHAR_OP_MULT: token.type = tt_Operator; break;
-      case TOKCHAR_OP_DIV: token.type = tt_Operator; break;
-      case TOKCHAR_OP_POW: token.type = tt_Operator; break;
-      default: {
-        if (error_string) str_cpy_cstr(error_string, "Unexpected character discovered");
-        RES_RETURN(r_EPARSE, -1);
-      }
+      token.type = tt_Operator;
+      if (0) {}
+#define X(TOK_OP, TOK_ENUM) else if (!strncmp(TOK_OP, lstate.line->text + tokenStart, strlen(TOK_OP))) token.operator = TOK_ENUM;
+      TOK_OPS
+#undef X
+      else {
+        token.type = tt_None;
       }
     }
 
     switch (token.type) {
     case tt_None: break;
     case tt_Unknown: {
-      if (error_string) str_cpy_cstr(error_string, "Encountered an unknown token");
+      str_cpy_cstr(error_string, "Encountered an unknown token");
     } RES_RETURN(r_EPARSE, -1);
     case tt_String:
     case tt_Identifier: {

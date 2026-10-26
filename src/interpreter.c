@@ -1,4 +1,5 @@
 #include "interpreter.h"
+#include "interpreter_helpers.h"
 #include "debug.h"
 #include "lexer.h"
 #include "result.h"
@@ -9,21 +10,7 @@
 
 void _var_free(ItpVar* var);
 void _line_free(ItpLine* line);
-int _interpret_keyword(Itp* itp);
-int _interpret_identifier(Itp* itp);
 
-
-ItpVar* _get_var(const Itp* itp, const Str* name) {
-  ASSERT(itp);
-  ASSERT(name);
-
-  for (size_t i = 0; i < itp->variables.count; i++) {
-    ItpVar* var = vec_get((Vec*)&itp->variables, i);
-    if (str_cmp(name, &var->name)) RES_RETURN(r_ENONE, var);
-  }
-
-  RES_RETURN(r_ENO_DATA, NULL);
-}
 
 void _var_free(ItpVar* var) {
   ASSERT(var);
@@ -39,29 +26,10 @@ void _line_free(ItpLine* line) {
   }
 }
 
-int _interpret_keyword(Itp* itp) {
-  
-}
-
-int _interpret_identifier(Itp* itp) {
-  ASSERT(itp);
-
-  ItpLine* line = vec_get(&itp->lines, itp->lineIndex);
-  Token* first_tok = vec_get(&line->tokens, 0);
-
-  ItpVar* var = _get_var(itp, &first_tok->string);
-  if (!var) {
-    if (str_cstr(&first_tok->string)) return -1;
-    str_fmt_cstr(&itp->errorString, "Not a valid identifier or keyword: \"%s\"", first_tok->string); 
-  }
-
-  RES_RETURN(r_ENONE, 0);
-}
-
 int itp_init(Itp* itp) {
   ASSERT(itp);
 
-  if (vec_init(&itp->lines, sizeof(Str))) return -1;
+  if (vec_init(&itp->lines, sizeof(ItpLine))) return -1;
   if (vec_init(&itp->variables, sizeof(ItpVar))) return -1;
 
   itp->lineIndex = 0;
@@ -116,22 +84,20 @@ int itp_line_add(Itp* itp, const Str* text, size_t line_num) {
   RES_RETURN(r_ENONE, 0);
 }
 
-int itp_interpret_line(Itp* itp, Vec* tokens) {
+int itp_interpret_line(Itp* itp, size_t i) {
   ASSERT(itp);
-  ASSERT(tokens);
 
-  if (!tokens->count) RES_RETURN(r_ENONE, 0);
+  ItpLine* line = vec_get(&itp->lines, i);
+  Token* token = vec_get(&line->tokens, 0);
 
-  if (tokens->count == 0) return -1;
-
-  Token* token = vec_get(tokens, 0);
-
-  if (token->type == tt_Keyword) {
-    if (_interpret_keyword(itp)) return -1;
-  } else if (token->type == tt_Identifier) {
-    if (_interpret_identifier(itp)) return -1;
-  } else {
-    str_cpy_cstr(&itp->errorString, "Bad.");
+  switch (token->type) {
+    case tt_Identifier: {
+      if (handle_variable(itp)) return -1;
+    } break;
+    case tt_Keyword: {
+      if (handle_keyword(itp)) return -1;
+    } break;
+    default: break;
   }
   
   RES_RETURN(r_ENONE, 0);

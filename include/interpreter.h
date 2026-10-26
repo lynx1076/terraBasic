@@ -5,8 +5,16 @@
 #include "vector.h"
 #include "str.h"
 
+typedef enum {
+  itv_None,
+  itv_Float,
+  itv_String,
+  itv_Array,
+} ItpVarType;
+
 typedef struct {
   Str name;
+  ItpVarType type;
   union {
     Str string;
     float* array;
@@ -31,6 +39,7 @@ int itp_init(Itp* itp);
 void itp_free(Itp* itp);
 
 int itp_line_add(Itp* itp, const Str* text, size_t line_num);
+int itp_interpret_line(Itp* itp, size_t i);
 int itp_print_line(Itp* itp, size_t line_num);
 
 #endif

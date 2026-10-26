@@ -7,17 +7,39 @@
 #define SIGCHAR_STRING_BOUNDARY   '\"'
 #define SIGCHAR_DECIMAL_POINT     '.'
 
-#define TOKCHAR_COMMA             ','
-#define TOKCHAR_EQUALS            '='
+#define TOK_OP_COMMA          ","
 
-#define TOKCHAR_LPAREN            '('
-#define TOKCHAR_RPAREN            ')'
+#define TOK_OP_LPAREN         "("
+#define TOK_OP_RPAREN         ")"
 
-#define TOKCHAR_OP_PLUS           '+'
-#define TOKCHAR_OP_MINUS          '-'
-#define TOKCHAR_OP_MULT           '*'
-#define TOKCHAR_OP_DIV            '/'
-#define TOKCHAR_OP_POW            '^'
+#define TOK_OP_PLUS           "+"
+#define TOK_OP_MINUS          "-"
+#define TOK_OP_MULT           "*"
+#define TOK_OP_DIV            "/"
+#define TOK_OP_POW            "^"
+
+#define TOK_OP_CMP_L          "<"
+#define TOK_OP_CMP_G          ">"
+#define TOK_OP_CMP_LT         "<="
+#define TOK_OP_CMP_GT         ">="
+#define TOK_OP_CMP_EQ         "="
+#define TOK_OP_CMP_NEQ        "<>"
+
+#define TOK_OPS \
+  X(TOK_OP_COMMA, to_Comma) \
+  X(TOK_OP_LPAREN, to_LParen) \
+  X(TOK_OP_RPAREN, to_RParen) \
+  X(TOK_OP_PLUS, to_Plus) \
+  X(TOK_OP_MINUS, to_Minus) \
+  X(TOK_OP_MULT, to_Mult) \
+  X(TOK_OP_DIV, to_Div) \
+  X(TOK_OP_POW, to_Pow) \
+  X(TOK_OP_CMP_L, to_CmpL) \
+  X(TOK_OP_CMP_G, to_CmpG) \
+  X(TOK_OP_CMP_LT, to_CmpLT) \
+  X(TOK_OP_CMP_GT, to_CmpGT) \
+  X(TOK_OP_CMP_EQ, to_CmpEq) \
+  X(TOK_OP_CMP_NEQ, to_CmpNEq) \
 
 #define KEYWORD_LET               "LET"
 #define KEYWORD_PRINT             "PRINT"
@@ -43,16 +65,13 @@ typedef enum {
   tt_RParen,
   tt_Operator,
   tt_Keyword,
-  tt_Equals,
 } TokenType;
 
 typedef enum {
   to_None,
-  to_Add,
-  to_Sub,
-  to_Mult,
-  to_Div,
-  to_Pow,
+#define X(TOK_OP, TOK_ENUM) TOK_ENUM,
+  TOK_OPS
+#undef X
 } TokenOperator;
 
 typedef enum {
@@ -84,7 +103,9 @@ typedef struct {
 void tok_free(Token* token);
 char* tok_get_type_cstr(TokenType type);
 void tok_print(Token* token);
+const char* tok_get_operator_cstr(TokenOperator op);
 TokenKeyword tok_get_keyword(const char* cstr, size_t len);
 char* tok_tk_get_cstr(TokenKeyword tk);
+int tok_get_operator_precedence(TokenOperator op);
 
 #endif
