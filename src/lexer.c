@@ -123,14 +123,14 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
       TOK_OPS
 #undef X
       else {
-        token.type = tt_None;
+        token.type = tt_Unknown;
       }
     }
 
     switch (token.type) {
     case tt_None: break;
     case tt_Unknown: {
-      str_cpy_cstr(error_string, "Encountered an unknown token");
+      str_cpy_cstr(error_string, "Encountered an unknown character");
     } RES_RETURN(r_EPARSE, -1);
     case tt_String:
     case tt_Identifier: {

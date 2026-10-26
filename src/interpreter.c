@@ -110,9 +110,7 @@ int itp_print_line(Itp* itp, size_t line_num) {
     ItpLine* line = vec_get(&itp->lines, i);
     if (line->line_num != line_num) continue;
 
-    printf("%zu:\n", line_num);
     if (str_cstr(&line->text)) return -1;
-    printf("%s\n", line->text.text);
 
     for (size_t i = 0; i < line->tokens.count; i++) {
       Token* token = vec_get(&line->tokens, i);
