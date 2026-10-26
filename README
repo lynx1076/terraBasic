@@ -1,3 +1,23 @@
 An implementation of BASIC
 
 Made for hackClub terra 26/27
+
+### How to use:
+
+As of right now only the lexer is tied into the main function unfortunately.
+Feel free to try it out though and try to break it a little.
+Starting the app from a terminal will prompt you to enter a line of text.
+This text is what the interpreter would run normally since BASIC works line by line.
+
+Different text combinations will result in different tokens being generated:
+
+GOTO => Keyword
+mygoto => Identifier
+20 => Long
+20.1 => Float
+"Hi" => String
+
+etc...
+
+Numeric values are also parsed immediately.
+
