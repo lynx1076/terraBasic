@@ -25,6 +25,7 @@ int evl_eval(Itp* itp, size_t start) {
 
   bool string = false;
 
+  printf("RPN:\n");
   for (size_t i = 0; i < rpn.count; i++) {
     Token* token = vec_get(&rpn, i);
     printf("[%zu] ", i);
@@ -74,7 +75,6 @@ int _evl_get_rpn(Itp* itp, size_t start, Vec* rpn) {
       case tt_Float: {
         if (vec_push(rpn, token)) return -1;
       } break;
-      case tt_Keyword:
       case tt_Operator: {
         Token* stackToken = vec_get_last(&stack);
         TokenOperator stack_operator;
@@ -83,44 +83,55 @@ int _evl_get_rpn(Itp* itp, size_t start, Vec* rpn) {
         TokenOperator token_operator = token->operator;
 
         size_t stack_precedence = tok_get_operator_precedence(stack_operator);
-        size_t token_precedence;
-        if (token->type != tt_Keyword) token_precedence = tok_get_operator_precedence(token_operator);
-        else token_precedence = 1000;
+        size_t token_precedence = tok_get_operator_precedence(token_operator);
 
         if (token->operator == to_RParen) {
           while (stackToken && stackToken->operator != to_LParen) {
-            Token tmpToken;
-            vec_pop(&stack, &tmpToken);
-            if (vec_push(rpn, &tmpToken)) return -1;
+            if (vec_push(rpn, stackToken)) return -1;
+            vec_pop(&stack, NULL);
             stackToken = vec_get_last(&stack);
           }
-          vec_pop(&stack, &stackToken);
+
           if (stack.count == 0 && stackToken->operator != to_LParen) {
             if (str_cpy_cstr(&itp->errorString, "Missing opening parenthesis")) return -1;
+            RES_RETURN(r_ENONE, -1);
           }
+          vec_pop(&stack, NULL);
         } else if (stack_precedence > token_precedence) {
-          TokenOperator tmpop = token_operator;
-          token_operator = stack_operator;
-          stack_operator = tmpop;
+          Token tmpTok;
 
-          if (vec_pop(&stack, stackToken)) return -1;
-          if (vec_push(rpn, stackToken)) return -1;
+          if (vec_pop(&stack, &tmpTok)) return -1;
+          if (vec_push(rpn, &tmpTok)) return -1;
           if (vec_push(&stack, token)) return -1;
 
           printf("Switch out ");
           tok_print(token);
           printf(" with ");
-          tok_print(stackToken);
+          tok_print(&tmpTok);
           printf("\n");
         } else {
           if (vec_push(&stack, token)) return -1;
         }
-    } break;
-
-    default: {
-      if (str_fmt_cstr(&itp->errorString, "%s not allowed here", tok_get_type_cstr(token->type))) return -1;
-    } RES_RETURN(r_EINTERPRET, -1);
+      } break;
+      default: {
+        if (str_fmt_cstr(&itp->errorString, "%s not allowed here", tok_get_type_cstr(token->type))) return -1;
+      } RES_RETURN(r_EINTERPRET, -1);
     }
+
+    printf("Stack:\n");
+    for (size_t i = 0; i < stack.count; i++) {
+      printf("[%zu]: ", i);
+      tok_print(vec_get(&stack, i));
+      printf("\n");
+    }
+
+    printf("Queue:\n");
+    for (size_t i = 0; i < rpn->count; i++) {
+      printf("[%zu]: ", i);
+      tok_print(vec_get(rpn, i));
+      printf("\n");
+    }
+    printf("\n");
 
     token = vec_get(tokens, ++i);
   }

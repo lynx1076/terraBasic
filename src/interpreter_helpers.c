@@ -31,7 +31,7 @@ int handle_variable(Itp* itp) {
 
   if (!var) {
     if (str_cstr(&token->string)) return -1;
-    if (str_fmt_cstr(&itp->errorString, "\"%s\" is not a known variable", token->string)) return -1;
+    if (str_fmt_cstr(&itp->errorString, "\"%s\" is not a known variable", token->string.text)) return -1;
 
     RES_RETURN(r_EINTERPRET, -1);
   }

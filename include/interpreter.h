@@ -18,7 +18,8 @@ typedef struct {
   union {
     Str string;
     float* array;
-    float value;
+    long _long;
+    float _float;
   };
 } ItpVar;
 

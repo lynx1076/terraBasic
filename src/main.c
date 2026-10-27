@@ -20,15 +20,8 @@ int main(int argc, char** argv) {
 
   if (str_init_cstr(&error, "Unknown error")) return _res;
 
-  char* line;
-  size_t len;
-
-  printf("Input line to lex: ");
-  fflush(stdout);
-  if (getline(&line, &len, stdin) == -1) RES_RETURN(r_EUNKNOWN, _res);
-
   Str line_str;
-  if (str_init_cstr(&line_str, line)) return _res;
+  if (str_init_cstr(&line_str, "a = 1 * (2 + 3)")) return _res;
 
   if (str_cstr(&line_str)) return _res;
   printf("Processing string (%zu): %s\n", line_str.length, line_str.text);
@@ -42,6 +35,19 @@ int main(int argc, char** argv) {
     return _res;
   }
   if (itp_print_line(&itp, 1)) return _res;
+
+  ItpVar var;
+  if (str_init_cstr(&var.name, "a")) return _res;
+  var.type = itv_Float;
+  var._float = 20;
+
+  if (vec_push(&itp.variables, &var)) return _res;
+
+  if (itp_interpret_line(&itp, 0)) {
+    if (str_cstr(&itp.errorString)) return _res;
+    printf("Failed to add line: %s\n", itp.errorString.text);
+    return _res;
+  }
 
   return 0;
 }

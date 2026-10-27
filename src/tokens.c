@@ -129,6 +129,7 @@ int tok_get_operator_precedence(TokenOperator op) {
     case to_CmpG:
     case to_CmpLT:
     case to_CmpGT:
+    case to_LParen:
       return 100;
     case to_None:
     default:

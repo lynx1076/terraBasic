@@ -87,7 +87,7 @@ int vec_push_to(Vec* vec, size_t index, void* el) {
 
 int vec_pop(Vec* vec, void* el) {
   ASSERT(vec);
-  ASSERT(el);
+  ASSERT(vec->count);
 
   if (el) memcpy(el, (char*)vec->memory + (vec->count - 1) * vec->elSize, vec->elSize);
   vec->count--;
