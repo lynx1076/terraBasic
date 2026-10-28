@@ -55,14 +55,13 @@
 typedef enum {
   tt_Unknown,
   tt_None,
+  tt_Function,
   tt_Identifier,
   tt_Float,
   tt_Long,
   tt_Comma,
   tt_Dot,
   tt_String,
-  tt_LParen,
-  tt_RParen,
   tt_Operator,
   tt_Keyword,
 } TokenType;
@@ -89,8 +88,14 @@ typedef enum {
 } TokenKeyword;
 
 typedef struct {
+  size_t argCount;
+  Str name;
+} TokenFunction;
+
+typedef struct {
   TokenType type;
   union {
+    TokenFunction func;
     TokenOperator operator;
     TokenKeyword keyword;
     float _float;

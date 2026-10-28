@@ -42,7 +42,7 @@ int handle_variable(Itp* itp) {
     RES_RETURN(r_EINTERPRET, -1);
   }
 
-  evl_eval(itp, 2);
+  if (evl_eval(itp, 2)) return -1;
 
   RES_RETURN(r_ENONE, 0);
 }

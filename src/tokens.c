@@ -12,6 +12,8 @@ void tok_free(Token* token) {
 
   if (token->type == tt_String || token->type == tt_Identifier) {
     str_free(&token->string);
+  } else if (token->type == tt_Function) {
+    str_free(&token->func.name);
   }
 }
 
@@ -25,8 +27,6 @@ char* tok_get_type_cstr(TokenType type) {
   CASE(tt_Comma);
   CASE(tt_Dot);
   CASE(tt_String);
-  CASE(tt_LParen);
-  CASE(tt_RParen);
   CASE(tt_Operator);
   CASE(tt_Keyword);
   default:
@@ -43,7 +43,7 @@ void tok_print(Token* token) {
 
   switch (token->type) {
     case tt_Operator: {
-      printf("%s => \"%s\"", tok_get_type_cstr(token->type), tok_get_operator_cstr(token->operator));
+      printf("%s => %s", tok_get_type_cstr(token->type), tok_get_operator_cstr(token->operator));
     } break;
     case tt_Identifier:
     case tt_String: {
@@ -129,8 +129,9 @@ int tok_get_operator_precedence(TokenOperator op) {
     case to_CmpG:
     case to_CmpLT:
     case to_CmpGT:
-    case to_LParen:
       return 100;
+    case to_LParen:
+    case to_RParen:
     case to_None:
     default:
       return 0;

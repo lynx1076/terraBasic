@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
   if (str_init_cstr(&error, "Unknown error")) return _res;
 
   Str line_str;
-  if (str_init_cstr(&line_str, "a = 1 * (2 + 3)")) return _res;
+  if (str_init_cstr(&line_str, "a = (1 + 2) * (2 + b)")) return _res;
 
   if (str_cstr(&line_str)) return _res;
   printf("Processing string (%zu): %s\n", line_str.length, line_str.text);
@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 
   if (itp_interpret_line(&itp, 0)) {
     if (str_cstr(&itp.errorString)) return _res;
-    printf("Failed to add line: %s\n", itp.errorString.text);
+    printf("Failed to interpret line: %s\n", itp.errorString.text);
     return _res;
   }
 

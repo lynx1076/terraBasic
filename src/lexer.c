@@ -106,8 +106,8 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
       tokenStart++;
       do {
         if (_eol_reached(&lstate)) {
-          str_cpy_cstr(error_string, "String was not terminated");
-          RES_RETURN(r_EPARSE, -1);
+          if (str_cpy_cstr(error_string, "String was not terminated")) return -1;
+          RES_RETURN(r_ELEX, -1);
         }
         c = _move_cursor(&lstate, 1);
       } while (c != SIGCHAR_STRING_BOUNDARY);
