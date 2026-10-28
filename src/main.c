@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 #include "interpreter.h"
 #include "result.h"
 #include "str.h"
@@ -20,8 +21,16 @@ int main(int argc, char** argv) {
 
   if (str_init_cstr(&error, "Unknown error")) return _res;
 
+  printf(">>>");
+  char* line;
+  size_t size;
+  if (getline(&line, &size, stdin) < 0) {
+    printf("Failed to get input\n");
+    return -1;
+  }
+
   Str line_str;
-  if (str_init_cstr(&line_str, "a = (1 + 2) * (2 + b)")) return _res;
+  if (str_init_cstr(&line_str, line)) return _res;
 
   if (str_cstr(&line_str)) return _res;
   printf("Processing string (%zu): %s\n", line_str.length, line_str.text);
