@@ -45,8 +45,7 @@ int _evl_get_rpn(Itp* itp, size_t start, Vec* rpn) {
   Vec stack;
   if (vec_init(&stack, sizeof(Token))) return -1;
 
-  Vec functionStack;
-  if (vec_init(&functionStack, sizeof(Token))) return -1;
+  size_t functionDepth = 0;
 
   while (token) {
     printf("Token[%zu] ", i);
@@ -59,7 +58,8 @@ int _evl_get_rpn(Itp* itp, size_t start, Vec* rpn) {
           if (str_cpy_cstr(&itp->errorString, "Expected parenthesis after function declaration")) return -1;
           RES_RETURN(r_EINTERPRET, -1);
         }
-        if (vec_push(&functionStack, token)) return -1;
+        functionDepth++;
+        if (vec_push(&stack, token)) return -1;
       } break;
       case tt_Identifier:
       case tt_Long:
@@ -67,9 +67,9 @@ int _evl_get_rpn(Itp* itp, size_t start, Vec* rpn) {
         if (vec_push(rpn, token)) return -1;
       } break;
       case tt_Operator: {
-        Token* stackToken = vec_get_last(&stack);
+        Token* stack_token = vec_get_last(&stack);
         TokenOperator stack_operator;
-        if (stackToken) stack_operator = stackToken->operator;
+        if (stack_token && stack_token->type == tt_Operator) stack_operator = stack_token->operator;
         else stack_operator = to_None;
         TokenOperator token_operator = token->operator;
 
@@ -77,15 +77,12 @@ int _evl_get_rpn(Itp* itp, size_t start, Vec* rpn) {
         size_t token_precedence = tok_get_operator_precedence(token_operator);
 
         if (token->operator == to_RParen) {
-          if (functionStack.count) {
-            Token* funcToken = vec_get_last(&functionStack);
-          }
           bool noOpen = false;
-          while (stackToken->operator != to_LParen) {
-            if (vec_push(rpn, stackToken)) return -1;
+          while (stack_token->operator != to_LParen) {
+            if (vec_push(rpn, stack_token)) return -1;
             vec_pop(&stack, NULL);
             if (stack.count) {
-              stackToken = vec_get_last(&stack);
+              stack_token = vec_get_last(&stack);
             } else {
               noOpen = true;
               break;
@@ -95,9 +92,10 @@ int _evl_get_rpn(Itp* itp, size_t start, Vec* rpn) {
           if (noOpen) {
             if (str_cpy_cstr(&itp->errorString, "Missing opening parenthesis")) return -1;
             RES_RETURN(r_ENONE, -1);
-          } else {
-            vec_pop(&stack, NULL);
           }
+          
+          if (vec_pop(&stack, NULL)) return -1;
+          
         } else if (token->operator == to_LParen) {
           if (vec_push(&stack, token)) return -1;
         } else if (stack_precedence > token_precedence) {
