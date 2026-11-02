@@ -2,26 +2,9 @@
 #define INTERPRETER_H
 
 #include <stddef.h>
+#include "tokens.h"
 #include "vector.h"
 #include "str.h"
-
-typedef enum {
-  itv_None,
-  itv_Float,
-  itv_String,
-  itv_Array,
-} ItpVarType;
-
-typedef struct {
-  Str name;
-  ItpVarType type;
-  union {
-    Str string;
-    float* array;
-    long _long;
-    float _float;
-  };
-} ItpVar;
 
 typedef struct {
   size_t line_num;
@@ -35,6 +18,11 @@ typedef struct {
   Vec variables;
   Str errorString;
 } Itp;
+
+typedef struct {
+  Str name;
+  Token token;
+} ItpVar;
 
 int itp_init(Itp* itp);
 void itp_free(Itp* itp);

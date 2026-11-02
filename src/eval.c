@@ -1,6 +1,7 @@
 #include "eval.h"
 #include "eval_op.h"
 #include "debug.h"
+#include "interpreter_helpers.h"
 #include "result.h"
 #include "interpreter.h"
 #include "str.h"
@@ -22,16 +23,12 @@ int evl_eval(Itp* itp, size_t start, size_t stop) {
 
   if (_get_rpn(itp, start, stop, &rpn)) return -1;
 
-  Vec stack;
-  if (vec_init(&stack, sizeof(Token))) return -1;
+  Token res;
+  if (_eval_rpn(itp, &rpn, &res)) return -1;
 
-  printf("RPN:\n");
-  for (size_t i = 0; i < rpn.count; i++) {
-    Token* token = vec_get(&rpn, i);
-    printf("[%zu] ", i);
-    tok_print(token);
-    printf("\n");
-  }
+  printf("Finished on: ");
+  tok_print(&res);
+  printf("\n");
 
   RES_RETURN(r_ENONE, 0);
 }
@@ -49,10 +46,16 @@ int _eval_rpn(Itp* itp, Vec* rpn, Token* res) {
       if (evl_eval_op(itp, token, &stack)) return -1;
     } else if (token->type == tt_Function) {
 
+    } else if (token->type == tt_Variable) {
+      Token* tok = &itp_get_var(itp, &token->string)->token;
+      if (vec_push(&stack, tok)) return -1;
     } else {
       if (vec_push(&stack, token)) return -1;
     }
   }
+
+  if (vec_pop(&stack, res)) return -1;
+  vec_free(&stack);
 
   RES_RETURN(r_ENONE, 0);
 }

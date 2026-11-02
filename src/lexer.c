@@ -142,7 +142,11 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
 
     printf("'%.*s'\n", (int)(lstate.index - tokenStart + 1), lstate.line->text + tokenStart);
 
-    if (token.type == tt_String || token.type == tt_Variable) {
+    if (token.type == tt_String) {
+      if (str_init_cnstr(&token.string, lstate.line->text + tokenStart, lstate.index - tokenStart)) return -1;
+    }
+
+    if (token.type == tt_Variable) {
       if (str_init_cnstr(&token.string, lstate.line->text + tokenStart, lstate.index - tokenStart + 1)) return -1;
     }
 

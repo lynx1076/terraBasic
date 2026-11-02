@@ -49,8 +49,8 @@ int main(int argc, char** argv) {
 
   ItpVar var;
   if (str_init_cstr(&var.name, "a")) return _res;
-  var.type = itv_Float;
-  var._float = 20;
+  var.token.type = tt_Float;
+  var.token._float = 20;
 
   if (vec_push(&itp.variables, &var)) return _res;
 

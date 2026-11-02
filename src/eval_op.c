@@ -22,7 +22,8 @@ int evl_eval_op(Itp* itp, Token* token, Vec* stack) {
     Token ltok;
     if (vec_pop(stack, &ltok)) return -1;
 
-    if (rtok.type != tt_Long && rtok.type != tt_Float && rtok.type != tt_String) {
+    if ((rtok.type != tt_Long && rtok.type != tt_Float && rtok.type != tt_String) ||
+        (ltok.type != tt_Long && ltok.type != tt_Float && ltok.type != tt_String)) {
       if (str_fmt_cstr(&itp->errorString, "Cannot add %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
       RES_RETURN(r_EINTERPRET, -1);
     }
@@ -35,6 +36,7 @@ int evl_eval_op(Itp* itp, Token* token, Vec* stack) {
       Str lstr = ltok.string;
 
       if (!r_is_str) {
+        if (str_init(&rstr)) return -1;
         if (rtok.type == tt_Long) {
           if (str_fmt_cstr(&rstr, "%li", rtok._long)) return -1;
         } else {
@@ -43,6 +45,7 @@ int evl_eval_op(Itp* itp, Token* token, Vec* stack) {
       }
 
       if (!l_is_str) {
+        if (str_init(&lstr)) return -1;
         if (ltok.type == tt_Long) {
           if (str_fmt_cstr(&lstr, "%li", ltok._long)) return -1;
         } else {
@@ -74,6 +77,43 @@ int evl_eval_op(Itp* itp, Token* token, Vec* stack) {
           ._long = rtok._long + ltok._long
         };
       }
+    }
+
+    tok_free(&rtok);
+    tok_free(&ltok);
+
+    if (vec_push(stack, &res)) return -1;
+  } break;
+  case to_Minus: {
+    Token res;
+
+    Token rtok;
+    if (vec_pop(stack, &rtok)) return -1;
+    Token ltok;
+    if (vec_pop(stack, &ltok)) return -1;
+
+    if ((rtok.type != tt_Long && rtok.type != tt_Float) ||
+        (ltok.type != tt_Long && ltok.type != tt_Float)) {
+      if (str_fmt_cstr(&itp->errorString, "Cannot subtract %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
+      RES_RETURN(r_EINTERPRET, -1);
+    }
+
+    bool r_is_float = rtok.type == tt_Float;
+    bool l_is_float = ltok.type == tt_Float;
+      
+    if (r_is_float || l_is_float) {
+      if (!r_is_float) rtok._float = (float)rtok._long;
+      if (!l_is_float) ltok._float = (float)ltok._long;
+
+      res = (Token){
+        .type = tt_Float,
+        ._float = ltok._float - rtok._float
+      };
+    } else {
+      res = (Token){
+        .type = tt_Long,
+        ._long = ltok._long - rtok._long
+      };
     }
 
     tok_free(&rtok);
