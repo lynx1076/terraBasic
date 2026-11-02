@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "interpreter.h"
 #include "result.h"
@@ -31,6 +32,7 @@ int main(int argc, char** argv) {
 
   Str line_str;
   if (str_init_cstr(&line_str, line)) return _res;
+  free(line);
 
   if (str_cstr(&line_str)) return _res;
   printf("Processing string (%zu): %s\n", line_str.length, line_str.text);

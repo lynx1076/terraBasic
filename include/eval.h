@@ -5,6 +5,6 @@
 #include "interpreter.h"
 
 
-int evl_eval(Itp* itp, size_t start);
+int evl_eval(Itp* itp, size_t start, size_t stop);
 
 #endif

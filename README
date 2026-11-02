@@ -12,7 +12,7 @@ This text is what the interpreter would run normally since BASIC works line by l
 Different text combinations will result in different tokens being generated:
 
 GOTO => Keyword
-mygoto => Identifier
+mygoto => Variable
 20 => Long
 20.1 => Float
 "Hi" => String

@@ -67,7 +67,13 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
     size_t tokenStart = lstate.index;
     Token token;
 
-    if (isalpha(c)) {
+    token.type = tt_Unknown;
+
+    token.operator = tok_get_operator(lstate.line->text + tokenStart, lstate.line->length - lstate.index);
+    if (token.operator != to_None) {
+      token.type = tt_Operator;
+      _move_cursor(&lstate, strlen(tok_operator_get_cstr(token.operator)) - 1);
+    } else if (isalpha(c)) {
       while (isalnum(c) && !_eol_reached(&lstate)) c = _move_cursor(&lstate, 1);
 
       _move_cursor(&lstate, -1);
@@ -75,8 +81,14 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
       token.keyword = tok_get_keyword(lstate.line->text + tokenStart, lstate.index - tokenStart);
       if (token.keyword != tk_None) {
         token.type = tt_Keyword;
+      } else {
+        token.func.func = tok_get_function(lstate.line->text + tokenStart, lstate.index - tokenStart);
+        if (token.func.func != tf_None) {
+          token.type = tt_Function;
+          token.func.argCount = 0;
+        }
+        else token.type = tt_Variable;
       }
-      else token.type = tt_Identifier;
     } else if (isdigit(c)) {
       bool hadDecimalPoint = false;
       while (isdigit(c) || (c == SIGCHAR_DECIMAL_POINT && !hadDecimalPoint)) {
@@ -116,30 +128,25 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
     } else if (isspace(c)) {
       _skip_whitespace(&lstate);
       token.type = tt_None;
-    } else {
-      token.type = tt_Operator;
-      if (0) {}
-#define X(TOK_OP, TOK_ENUM) else if (!strncmp(TOK_OP, lstate.line->text + tokenStart, strlen(TOK_OP))) token.operator = TOK_ENUM;
-      TOK_OPS
-#undef X
-      else {
-        token.type = tt_Unknown;
-      }
     }
 
-    switch (token.type) {
-    case tt_None: break;
-    case tt_Unknown: {
-      str_cpy_cstr(error_string, "Encountered an unknown character");
-    } RES_RETURN(r_EPARSE, -1);
-    case tt_String:
-    case tt_Identifier: {
-      if (str_init_cnstr(&token.string, lstate.line->text + tokenStart, lstate.index - tokenStart + 1)) return -1;
-    } // Fall through
-    default: {
-      if (vec_push(tokens, &token)) return -1;
-    } break;
+    if (token.type == tt_None) {
+      _move_cursor(&lstate, 1);
+      continue;
     }
+
+    if (token.type == tt_Unknown) {
+      if (str_fmt_cstr(error_string, "Encountered an unknown token at %i: \"%.*s\"", lstate.index, lstate.index - tokenStart, lstate.line->text + tokenStart)) return -1;
+      RES_RETURN(r_ELEX, -1);
+    }
+
+    printf("'%.*s'\n", (int)(lstate.index - tokenStart + 1), lstate.line->text + tokenStart);
+
+    if (token.type == tt_String || token.type == tt_Variable) {
+      if (str_init_cnstr(&token.string, lstate.line->text + tokenStart, lstate.index - tokenStart + 1)) return -1;
+    }
+
+    if (vec_push(tokens, &token)) return -1;
 
     _move_cursor(&lstate, 1);
   }

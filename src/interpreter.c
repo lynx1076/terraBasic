@@ -91,7 +91,7 @@ int itp_interpret_line(Itp* itp, size_t i) {
   Token* token = vec_get(&line->tokens, 0);
 
   switch (token->type) {
-    case tt_Identifier: {
+    case tt_Variable: {
       if (handle_variable(itp)) return -1;
     } break;
     case tt_Keyword: {
@@ -112,6 +112,7 @@ int itp_print_line(Itp* itp, size_t line_num) {
 
     if (str_cstr(&line->text)) return -1;
 
+    printf("Line %zu\n", line_num);
     for (size_t i = 0; i < line->tokens.count; i++) {
       Token* token = vec_get(&line->tokens, i);
       printf("(%zu): ", i);

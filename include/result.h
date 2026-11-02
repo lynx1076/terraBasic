@@ -30,6 +30,7 @@
   X(r_EFILE) \
   X(r_EMISSING_DATA) \
   X(r_ECOMPATIBILITY) \
+  X(r_ENOT_IMPLEMENTED) \
 
 
 typedef enum {

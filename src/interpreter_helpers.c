@@ -25,7 +25,7 @@ int handle_variable(Itp* itp) {
   Vec* tokens = &((ItpLine*)vec_get(&itp->lines, itp->lineIndex))->tokens;
   
   Token* token = vec_get(tokens, 0);
-  if (token->type != tt_Identifier) RES_RETURN(r_EINTERPRET, -1);
+  if (token->type != tt_Variable) RES_RETURN(r_EINTERPRET, -1);
 
   ItpVar* var = itp_get_var(itp, &token->string);
 
@@ -37,12 +37,12 @@ int handle_variable(Itp* itp) {
   }
 
   token = vec_get(tokens, 1);
-  if (!token || token->type != tt_Operator || token->operator != to_CmpEq) {
+  if (!token || token->type != tt_Operator || token->operator != to_Eq) {
     if (str_fmt_cstr(&itp->errorString, "Expected assignment after variable", token->string)) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
-  if (evl_eval(itp, 2)) return -1;
+  if (evl_eval(itp, 2, tokens->count)) return -1;
 
   RES_RETURN(r_ENONE, 0);
 }

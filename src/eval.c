@@ -1,4 +1,5 @@
 #include "eval.h"
+#include "eval_op.h"
 #include "debug.h"
 #include "result.h"
 #include "interpreter.h"
@@ -9,16 +10,17 @@
 #include <stdio.h>
 
 
-int _evl_get_rpn(Itp* itp, size_t start, Vec* rpn);
+int _eval_rpn(Itp* itp, Vec* rpn, Token* res);
+int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn);
 
 
-int evl_eval(Itp* itp, size_t start) {
+int evl_eval(Itp* itp, size_t start, size_t stop) {
   ASSERT(itp);
 
   Vec rpn;
   if (vec_init(&rpn, sizeof(Token))) return -1;
 
-  if (_evl_get_rpn(itp, start, &rpn)) return -1;
+  if (_get_rpn(itp, start, stop, &rpn)) return -1;
 
   Vec stack;
   if (vec_init(&stack, sizeof(Token))) return -1;
@@ -34,8 +36,30 @@ int evl_eval(Itp* itp, size_t start) {
   RES_RETURN(r_ENONE, 0);
 }
 
-int _evl_get_rpn(Itp* itp, size_t start, Vec* rpn) {
+int _eval_rpn(Itp* itp, Vec* rpn, Token* res) {
   ASSERT(itp);
+  ASSERT(rpn);
+
+  Vec stack;
+  if (vec_init(&stack, sizeof(Token))) return -1;
+
+  for (size_t i = 0; i < rpn->count; i++) {
+    Token* token = vec_get(rpn, i);
+    if (token->type == tt_Operator) {
+      if (evl_eval_op(itp, token, &stack)) return -1;
+    } else if (token->type == tt_Function) {
+
+    } else {
+      if (vec_push(&stack, token)) return -1;
+    }
+  }
+
+  RES_RETURN(r_ENONE, 0);
+}
+
+int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn) {
+  ASSERT(itp);
+  ASSERT(rpn);
 
   size_t i = start;
 
@@ -45,24 +69,26 @@ int _evl_get_rpn(Itp* itp, size_t start, Vec* rpn) {
   Vec stack;
   if (vec_init(&stack, sizeof(Token))) return -1;
 
-  size_t functionDepth = 0;
+  size_t function_depth = 0;
 
-  while (token) {
+  while (token && i < stop) {
     printf("Token[%zu] ", i);
     tok_print(token);
     printf("\n");
     switch (token->type) {
       case tt_Function: {
-        Token* nextTok = vec_get(tokens, i);
+        Token* nextTok = vec_get(tokens, i + 1);
         if (!nextTok || nextTok->type != tt_Operator || nextTok->operator != to_LParen) {
           if (str_cpy_cstr(&itp->errorString, "Expected parenthesis after function declaration")) return -1;
           RES_RETURN(r_EINTERPRET, -1);
         }
-        functionDepth++;
+        function_depth++;
+        token->func.argCount = 1;
         if (vec_push(&stack, token)) return -1;
       } break;
-      case tt_Identifier:
+      case tt_Variable:
       case tt_Long:
+      case tt_String:
       case tt_Float: {
         if (vec_push(rpn, token)) return -1;
       } break;
@@ -80,7 +106,7 @@ int _evl_get_rpn(Itp* itp, size_t start, Vec* rpn) {
           bool noOpen = false;
           while (stack_token->operator != to_LParen) {
             if (vec_push(rpn, stack_token)) return -1;
-            vec_pop(&stack, NULL);
+            if (vec_pop(&stack, NULL)) return -1;
             if (stack.count) {
               stack_token = vec_get_last(&stack);
             } else {
@@ -95,9 +121,33 @@ int _evl_get_rpn(Itp* itp, size_t start, Vec* rpn) {
           }
           
           if (vec_pop(&stack, NULL)) return -1;
-          
+          if (function_depth) {
+            function_depth--;
+           
+            Token* funcToken = vec_get_last(&stack);
+            if (vec_push(rpn, funcToken)) return -1;
+            if (vec_pop(&stack, NULL)) return -1;
+          }
         } else if (token->operator == to_LParen) {
           if (vec_push(&stack, token)) return -1;
+        } else if (token->operator == to_Comma) {
+          if (function_depth == 0) {
+            if (str_cpy_cstr(&itp->errorString, "Cannot have comma outside function parameter list")) return -1;
+            RES_RETURN(r_EINTERPRET, -1);
+          }
+
+          while (stack_token->operator != to_LParen) {
+            if (vec_push(rpn, stack_token)) return -1;
+            if (vec_pop(&stack, NULL)) return -1;
+            
+            stack_token = vec_get_last(&stack);
+          }
+
+          Token* last_func = vec_get_last(&stack);
+          for (size_t i = 0; last_func->type != tt_Function; i++) {
+            last_func = vec_get(&stack, i);
+          }
+          last_func->func.argCount++;
         } else if (stack_precedence > token_precedence) {
           Token tmpTok;
 
@@ -143,6 +193,7 @@ int _evl_get_rpn(Itp* itp, size_t start, Vec* rpn) {
     if (vec_push(rpn, &tok)) return -1;
     if (tok.operator == to_LParen) {
       if (str_cpy_cstr(&itp->errorString, "Missing closing parenthesis")) return -1;
+      RES_RETURN(r_EINTERPRET, -1);
     }
   }
 
