@@ -130,6 +130,7 @@ typedef struct {
 
 
 void tok_free(Token* token);
+int tok_duplicate(Token* token, const Token* src);
 char* tok_get_type_cstr(TokenType type);
 void tok_print(Token* token);
 

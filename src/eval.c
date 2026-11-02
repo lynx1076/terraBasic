@@ -60,6 +60,26 @@ int _eval_rpn(Itp* itp, Vec* rpn, Token* res) {
   RES_RETURN(r_ENONE, 0);
 }
 
+int _change_sign(const Token* prev) {
+  ASSERT(prev);
+
+  switch (prev->operator) {
+    case to_LParen:
+    case to_Or:
+    case to_And:
+    case to_Not:
+    case to_Eq:
+    case to_NEq:
+    case to_LT:
+    case to_GT:
+    case to_LE:
+    case to_GE:
+      return 1;
+    default:
+      return 0;
+  }
+}
+
 int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn) {
   ASSERT(itp);
   ASSERT(rpn);
@@ -68,6 +88,7 @@ int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn) {
 
   Vec* tokens = &((ItpLine*)vec_get(&itp->lines, itp->lineIndex))->tokens;
   Token* token = vec_get(tokens, i);
+  Token* last_token = NULL;
 
   Vec stack;
   if (vec_init(&stack, sizeof(Token))) return -1;
@@ -75,9 +96,6 @@ int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn) {
   size_t function_depth = 0;
 
   while (token && i < stop) {
-    printf("Token[%zu] ", i);
-    tok_print(token);
-    printf("\n");
     switch (token->type) {
       case tt_Function: {
         Token* nextTok = vec_get(tokens, i + 1);
@@ -96,6 +114,13 @@ int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn) {
         if (vec_push(rpn, token)) return -1;
       } break;
       case tt_Operator: {
+        if (token->operator == to_Minus) {
+          if (!last_token || _change_sign(last_token)) {
+            Token zero_tok = {.type = tt_Long, ._long = 0}; // Sketchy :(
+            if (vec_push(rpn, &zero_tok)) return -1;
+          }
+        }
+
         Token* stack_token = vec_get_last(&stack);
         TokenOperator stack_operator;
         if (stack_token && stack_token->type == tt_Operator) stack_operator = stack_token->operator;
@@ -106,19 +131,19 @@ int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn) {
         size_t token_precedence = tok_get_operator_precedence(token_operator);
 
         if (token->operator == to_RParen) {
-          bool noOpen = false;
+          bool no_open = false;
           while (stack_token->operator != to_LParen) {
             if (vec_push(rpn, stack_token)) return -1;
             if (vec_pop(&stack, NULL)) return -1;
             if (stack.count) {
               stack_token = vec_get_last(&stack);
             } else {
-              noOpen = true;
+              no_open = true;
               break;
             }
           }
 
-          if (noOpen) {
+          if (no_open) {
             if (str_cpy_cstr(&itp->errorString, "Missing opening parenthesis")) return -1;
             RES_RETURN(r_ENONE, -1);
           }
@@ -158,11 +183,6 @@ int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn) {
           if (vec_push(rpn, &tmpTok)) return -1;
           if (vec_push(&stack, token)) return -1;
 
-          printf("Switch out ");
-          tok_print(token);
-          printf(" with ");
-          tok_print(&tmpTok);
-          printf("\n");
         } else {
           if (vec_push(&stack, token)) return -1;
         }
@@ -172,21 +192,7 @@ int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn) {
       } RES_RETURN(r_EINTERPRET, -1);
     }
 
-    printf("Stack:\n");
-    for (size_t i = 0; i < stack.count; i++) {
-      printf("[%zu]: ", i);
-      tok_print(vec_get(&stack, i));
-      printf("\n");
-    }
-
-    printf("Queue:\n");
-    for (size_t i = 0; i < rpn->count; i++) {
-      printf("[%zu]: ", i);
-      tok_print(vec_get(rpn, i));
-      printf("\n");
-    }
-    printf("\n");
-
+    last_token = token;
     token = vec_get(tokens, ++i);
   }
 

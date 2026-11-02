@@ -140,8 +140,6 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
       RES_RETURN(r_ELEX, -1);
     }
 
-    printf("'%.*s'\n", (int)(lstate.index - tokenStart + 1), lstate.line->text + tokenStart);
-
     if (token.type == tt_String) {
       if (str_init_cnstr(&token.string, lstate.line->text + tokenStart, lstate.index - tokenStart)) return -1;
     }

@@ -18,6 +18,18 @@ void tok_free(Token* token) {
   str_free(&token->string);
 }
 
+int tok_duplicate(Token* token, const Token* src) {
+  ASSERT(token);
+  ASSERT(src);
+
+  *token = *src;
+  if (token->type != tt_String && token->type != tt_Variable) RES_RETURN(r_ENONE, 0);
+
+  if (str_dup(&token->string, &src->string)) return -1;
+
+  RES_RETURN(r_ENONE, 0);
+}
+
 char* tok_get_type_cstr(TokenType type) {
   switch (type) {
 #define CASE(X) case X: return (char*)#X + 3

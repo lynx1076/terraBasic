@@ -22,4 +22,6 @@ in case of a variable assignment such as
 a = 2 + b * (x + y)
 
 an implementation of the shunting yard algorithm is invoked to try and get the R-value into RPN
+Said RPN is then parsed althogh as of right now only +/- and * are implemented.
+I hate myself for how I implemented sign-changing and I'm pretty sure people have gone to jail that is better than that hack.
 
