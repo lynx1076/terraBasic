@@ -94,7 +94,7 @@ const char* tok_keyword_get_cstr(TokenKeyword tk) {
 
 const char* tok_operator_get_cstr(TokenOperator to) {
   switch (to) {
-#define X(STR, ENUM) case ENUM: return STR;
+#define X(TOK_STR, TOK_ENUM, TOK_EVAL) case TOK_ENUM: return TOK_STR;
     TOK_OPS
 #undef X
     default: return "Unknown operator";
@@ -103,7 +103,7 @@ const char* tok_operator_get_cstr(TokenOperator to) {
 
 const char* tok_function_get_cstr(TokenFunction tf) {
   switch (tf) {
-#define X(STR, ENUM) case ENUM: return STR;
+#define X(TOK_STR, TOK_ENUM, TOK_EVAL) case TOK_ENUM: return TOK_STR;
     TOK_FUNCTIONS
 #undef X
     default: return "Unknown function";
@@ -127,7 +127,7 @@ TokenFunction tok_get_function(const char* cstr, size_t len) {
   
   if (!len) RES_RETURN(r_ENONE, tf_None);
  
-#define X(FUNCTION, TOKEN_FUNCTION)   if (!strncicmp((FUNCTION), cstr, len)) RES_RETURN(r_ENONE, (TOKEN_FUNCTION));
+#define X(TOK_STR, TOK_ENUM, TOK_EVAL)   if (!strncicmp((TOK_STR), cstr, len)) RES_RETURN(r_ENONE, (TOK_ENUM));
   TOK_FUNCTIONS
 #undef X
 
@@ -137,24 +137,36 @@ TokenFunction tok_get_function(const char* cstr, size_t len) {
 int _tok_try_operator(const char* cstr, size_t max_len, const char* suspect_cstr) {
   bool str_op = isalpha(*cstr);
 
+  int match_len = 0;
+
   while (*suspect_cstr && max_len--) {
     if (tolower(*suspect_cstr) != tolower(*cstr)) return 0;
     cstr++;
     suspect_cstr++;
+    match_len++;
   }
 
   if (str_op && (isalpha(*cstr) || *cstr == '_')) return 0;
-  return 1;
+  return match_len;
 }
 
 TokenOperator tok_get_operator(const char* cstr, size_t max_len) {
   ASSERT(cstr);
   
-#define X(OP_CSTR, OP_ENUM)   if (_tok_try_operator(cstr, max_len, (OP_CSTR))) RES_RETURN(r_ENONE, (OP_ENUM));
+  TokenOperator op = to_None;
+  int longest_match = 0;
+  int new_match;
+
+#define X(TOK_STR, TOK_ENUM, TOK_EVAL) \
+  new_match = _tok_try_operator(cstr, max_len, (TOK_STR)); \
+  if (new_match && new_match > longest_match) { \
+    longest_match = new_match; \
+    op = TOK_ENUM; \
+  }
   TOK_OPS
 #undef X
 
-  RES_RETURN(r_ENONE, to_None);
+  RES_RETURN(r_ENONE, op);
 }
 
 int tok_get_operator_precedence(TokenOperator op) {

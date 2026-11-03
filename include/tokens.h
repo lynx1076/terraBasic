@@ -7,74 +7,48 @@
 #define SIGCHAR_STRING_BOUNDARY   '\"'
 #define SIGCHAR_DECIMAL_POINT     '.'
 
-#define TOK_OP_COMMA              ","
-
-#define TOK_OP_LPAREN             "("
-#define TOK_OP_RPAREN             ")"
-
-#define TOK_OP_PLUS               "+"
-#define TOK_OP_MINUS              "-"
-#define TOK_OP_MULT               "*"
-#define TOK_OP_DIV                "/"
-#define TOK_OP_POW                "^"
-
-#define TOK_OP_LT                 "<"
-#define TOK_OP_GT                 ">"
-#define TOK_OP_LE                 "<="
-#define TOK_OP_GE                 ">="
-#define TOK_OP_EQ                 "="
-#define TOK_OP_NEQ                "<>"
-
-#define TOK_OP_OR                 "OR"
-#define TOK_OP_AND                "AND"
-#define TOK_OP_NOT                "NOT"
-
 #define TOK_OPS \
-  X(TOK_OP_COMMA, to_Comma) \
-  X(TOK_OP_LPAREN, to_LParen) \
-  X(TOK_OP_RPAREN, to_RParen) \
-  X(TOK_OP_PLUS, to_Plus) \
-  X(TOK_OP_MINUS, to_Minus) \
-  X(TOK_OP_MULT, to_Mult) \
-  X(TOK_OP_DIV, to_Div) \
-  X(TOK_OP_POW, to_Pow) \
-  X(TOK_OP_LT, to_LT) \
-  X(TOK_OP_GT, to_GT) \
-  X(TOK_OP_LE, to_LE) \
-  X(TOK_OP_GE, to_GE) \
-  X(TOK_OP_EQ, to_Eq) \
-  X(TOK_OP_NEQ, to_NEq) \
-  X(TOK_OP_OR, to_Or) \
-  X(TOK_OP_AND, to_And) \
-  X(TOK_OP_NOT, to_Not) \
-
-#define KEYWORD_LET               "LET"
-#define KEYWORD_PRINT             "PRINT"
-#define KEYWORD_INPUT             "INPUT"
-#define KEYWORD_GOTO              "GOTO"
-#define KEYWORD_GOSUB             "GOSUB"
-#define KEYWORD_RETURN            "RETURN"
-#define KEYWORD_END               "END"
-#define KEYWORD_IF                "IF"
-#define KEYWORD_THEN              "THEN"
-#define KEYWORD_REM               "REM"
+  X(",", to_Comma, eval_none) \
+  X("(", to_LParen, eval_none) \
+  X(")", to_RParen, eval_none) \
+  X("+", to_Plus, eval_plus) \
+  X("-", to_Minus, eval_minus) \
+  X("*", to_Mult, eval_mult) \
+  X("/", to_Div, eval_div) \
+  X("^", to_Pow, eval_pow) \
+  X("<", to_LT, eval_lt) \
+  X(">", to_GT, eval_gt) \
+  X("<=", to_LE, eval_le) \
+  X(">=", to_GE, eval_ge) \
+  X("=", to_Eq, eval_eq) \
+  X("<>", to_NEq, eval_neq) \
+  X("OR", to_Or, eval_or) \
+  X("AND", to_And, eval_and) \
+  X("NOT", to_Not, eval_not) \
 
 #define TOK_KEYOWRDS \
-  X(KEYWORD_LET, tk_Let) \
-  X(KEYWORD_PRINT, tk_Print) \
-  X(KEYWORD_INPUT, tk_Input) \
-  X(KEYWORD_GOTO, tk_Goto) \
-  X(KEYWORD_GOSUB, tk_Gosub) \
-  X(KEYWORD_RETURN, tk_Return) \
-  X(KEYWORD_END, tk_End) \
-  X(KEYWORD_IF, tk_If) \
-  X(KEYWORD_THEN, tk_Then) \
-  X(KEYWORD_REM, tk_Remark) \
-
-#define FUNCTION_SIN              "SIN"
+  X("LET", tk_Let) \
+  X("PRINT", tk_Print) \
+  X("INPUT", tk_Input) \
+  X("GOTO", tk_Goto) \
+  X("GOSUB", tk_Gosub) \
+  X("RETURN", tk_Return) \
+  X("END", tk_End) \
+  X("IF", tk_If) \
+  X("THEN", tk_Then) \
+  X("REM", tk_Remark) \
 
 #define TOK_FUNCTIONS \
-  X(FUNCTION_SIN, tf_Sin) \
+  X("SIN", tf_Sin, eval_sin) \
+  X("COS", tf_Cos, eval_cos) \
+  X("TAN", tf_Tan, eval_tan) \
+  X("ASIN", tf_ASin, eval_asin) \
+  X("ACOS", tf_ACos, eval_acos) \
+  X("ATAN", tf_ATan, eval_atan) \
+  X("ABS", tf_Abs, eval_abs) \
+  X("LEFT", tf_Left, eval_left) \
+  X("RIGHT", tf_Right, eval_right) \
+  X("MID", tf_Mid, eval_mid) \
 
 typedef enum {
   tt_Unknown,
@@ -92,21 +66,21 @@ typedef enum {
 
 typedef enum {
   to_None,
-#define X(TOK_OP, TOK_ENUM) TOK_ENUM,
+#define X(TOK_STR, TOK_ENUM, TOK_EVAL) TOK_ENUM,
   TOK_OPS
 #undef X
 } TokenOperator;
 
 typedef enum {
   tk_None,
-#define X(TOK_KW, TOK_ENUM) TOK_ENUM,
+#define X(TOK_STR, TOK_ENUM) TOK_ENUM,
   TOK_KEYOWRDS
 #undef X
 } TokenKeyword;
 
 typedef enum {
   tf_None,
-#define X(TOK_FUNC, TOK_ENUM) TOK_ENUM,
+#define X(TOK_STR, TOK_ENUM, TOK_EVAL) TOK_ENUM,
   TOK_FUNCTIONS
 #undef X
 } TokenFunction;

@@ -90,6 +90,38 @@ int str_cmp_substr(const Str* str, const Str* substr, size_t startIndex) {
   RES_RETURN(r_ENONE, 1);
 }
 
+int str_is_greater(Str* str1, Str* str2) {
+  ASSERT(str1);
+  ASSERT(str2);
+
+  size_t len1 = str1->length;
+  size_t len2 = str2->length;
+  size_t len = len1 > len2 ? len2 : len1;
+
+  for (size_t i = 0; i < len; i++) {
+    if (str1->text[i] > str2->text[i]) return 1;
+    if (str1->text[i] < str2->text[i]) return 0;
+  }
+
+  return len1 > len2;
+}
+
+int str_is_less(Str* str1, Str* str2) {
+  ASSERT(str1);
+  ASSERT(str2);
+
+  size_t len1 = str1->length;
+  size_t len2 = str2->length;
+  size_t len = len1 > len2 ? len2 : len1;
+
+  for (size_t i = 0; i < len; i++) {
+    if (str1->text[i] < str2->text[i]) return 1;
+    if (str1->text[i] > str2->text[i]) return 0;
+  }
+
+  return len1 < len2;
+}
+
 int str_cat(Str* str, const Str* str2) {
   ASSERT(str && str2);
 
@@ -196,8 +228,12 @@ int str_clear(Str* str) {
 int str_substr(Str* str, size_t startIndex, size_t length) {
   ASSERT(str);
 
-  str->length -= length + startIndex;
-  if (str->length != 0) {
+  if (startIndex >= str->length) return str_clear(str);
+
+  if (length > str->length) length = str->length;
+  else str->length = length;
+  
+  if (str->length != 0 && startIndex) {
     memmove(str->text, str->text + startIndex, str->length);
   }
 

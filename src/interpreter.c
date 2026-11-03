@@ -14,6 +14,9 @@ void _line_free(ItpLine* line);
 
 void _var_free(ItpVar* var) {
   ASSERT(var);
+
+  tok_free(&var->token);
+  str_free(&var->name);
 }
 
 void _line_free(ItpLine* line) {
@@ -24,6 +27,7 @@ void _line_free(ItpLine* line) {
 
     tok_free(token);
   }
+  str_free(&line->text);
 }
 
 int itp_init(Itp* itp) {

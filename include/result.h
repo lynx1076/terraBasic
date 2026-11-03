@@ -31,6 +31,7 @@
   X(r_EMISSING_DATA) \
   X(r_ECOMPATIBILITY) \
   X(r_ENOT_IMPLEMENTED) \
+  X(r_EUNREACHABLE) \
 
 
 typedef enum {

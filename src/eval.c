@@ -1,4 +1,5 @@
 #include "eval.h"
+#include "eval_func.h"
 #include "eval_op.h"
 #include "debug.h"
 #include "interpreter_helpers.h"
@@ -7,6 +8,7 @@
 #include "str.h"
 #include "tokens.h"
 #include "vector.h"
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 
@@ -15,7 +17,7 @@ int _eval_rpn(Itp* itp, Vec* rpn, Token* res);
 int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn);
 
 
-int evl_eval(Itp* itp, size_t start, size_t stop) {
+int evl_eval(Itp* itp, size_t start, size_t stop, Token* res) {
   ASSERT(itp);
 
   Vec rpn;
@@ -23,12 +25,15 @@ int evl_eval(Itp* itp, size_t start, size_t stop) {
 
   if (_get_rpn(itp, start, stop, &rpn)) return -1;
 
-  Token res;
-  if (_eval_rpn(itp, &rpn, &res)) return -1;
+  printf("\nRPN\n");
+  for (size_t i = 0; i < rpn.count; i++) {
+    Token* tok = vec_get(&rpn, i);
+    printf("[%zu] ", i);
+    tok_print(tok);
+    printf("\n");
+  }
 
-  printf("Finished on: ");
-  tok_print(&res);
-  printf("\n");
+  if (_eval_rpn(itp, &rpn, res)) return -1;
 
   RES_RETURN(r_ENONE, 0);
 }
@@ -45,16 +50,19 @@ int _eval_rpn(Itp* itp, Vec* rpn, Token* res) {
     if (token->type == tt_Operator) {
       if (evl_eval_op(itp, token, &stack)) return -1;
     } else if (token->type == tt_Function) {
-
+      if (evl_eval_func(itp, token, &stack)) return -1;
     } else if (token->type == tt_Variable) {
-      Token* tok = &itp_get_var(itp, &token->string)->token;
-      if (vec_push(&stack, tok)) return -1;
+      Token* var = &itp_get_var(itp, &token->string)->token;
+      Token tok;
+      if (tok_duplicate(&tok, var)) return -1;
+      if (vec_push(&stack, &tok)) return -1;
     } else {
       if (vec_push(&stack, token)) return -1;
     }
   }
 
   if (vec_pop(&stack, res)) return -1;
+  ASSERT(stack.count == 0);
   vec_free(&stack);
 
   RES_RETURN(r_ENONE, 0);

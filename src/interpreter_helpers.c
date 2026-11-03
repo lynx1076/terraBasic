@@ -25,7 +25,7 @@ int handle_variable(Itp* itp) {
   Vec* tokens = &((ItpLine*)vec_get(&itp->lines, itp->lineIndex))->tokens;
   
   Token* token = vec_get(tokens, 0);
-  if (token->type != tt_Variable) RES_RETURN(r_EINTERPRET, -1);
+  ASSERT(token->type == tt_Variable);
 
   ItpVar* var = itp_get_var(itp, &token->string);
 
@@ -42,13 +42,17 @@ int handle_variable(Itp* itp) {
     RES_RETURN(r_EINTERPRET, -1);
   }
 
-  if (evl_eval(itp, 2, tokens->count)) return -1;
+  if (evl_eval(itp, 2, tokens->count, &var->token)) return -1;
 
   RES_RETURN(r_ENONE, 0);
 }
 
 int handle_keyword(Itp* itp) {
   ASSERT(itp);
+
+  Vec* tokens = &((ItpLine*)vec_get(&itp->lines, itp->lineIndex))->tokens;
+  Token* token = vec_get(tokens, 0);
+  ASSERT(token->type == tt_Keyword);
 
   RES_RETURN(r_ENONE, 0);
 }

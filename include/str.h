@@ -19,6 +19,8 @@ void str_free(Str* str);
 
 int str_cmp(const Str* str, const Str* str2);
 int str_cmp_substr(const Str* str, const Str* substr, size_t startIndex);
+int str_is_greater(Str* str1, Str* str2);
+int str_is_less(Str* str1, Str* str2);
 
 int str_cat(Str* str, const Str* str2);
 int str_insert(Str* str, const Str* str2, size_t insertIndex);
