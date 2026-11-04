@@ -6,6 +6,7 @@
 
 #define SIGCHAR_STRING_BOUNDARY   '\"'
 #define SIGCHAR_DECIMAL_POINT     '.'
+#define SIGSTR_REM_START          "REM"
 
 #define TOK_OPS \
   X(",", to_Comma, eval_none) \
@@ -26,17 +27,19 @@
   X("AND", to_And, eval_and) \
   X("NOT", to_Not, eval_not) \
 
-#define TOK_KEYOWRDS \
-  X("LET", tk_Let) \
-  X("PRINT", tk_Print) \
-  X("INPUT", tk_Input) \
-  X("GOTO", tk_Goto) \
-  X("GOSUB", tk_Gosub) \
-  X("RETURN", tk_Return) \
-  X("END", tk_End) \
-  X("IF", tk_If) \
-  X("THEN", tk_Then) \
-  X("REM", tk_Remark) \
+#define TOK_KEYWORDS \
+  X("REM", tk_Rem, keyword_none) \
+  X("LET", tk_Let, keyword_let) \
+  X("PRINT", tk_Print, keyword_print) \
+  X("INPUT", tk_Input, keyword_input) \
+  X("GOTO", tk_Goto, keyword_goto) \
+  X("GOSUB", tk_Gosub, keyword_gosub) \
+  X("RETURN", tk_Return, keyword_return) \
+  X("END", tk_End, keyword_end) \
+  X("IF", tk_If, keyword_if) \
+  X("ELSE", tk_Else, keyword_else) \
+  X("THEN", tk_Then, keyword_then) \
+  X(":", tk_Colon, keyword_colon) \
 
 #define TOK_FUNCTIONS \
   X("SIN", tf_Sin, eval_sin) \
@@ -73,8 +76,8 @@ typedef enum {
 
 typedef enum {
   tk_None,
-#define X(TOK_STR, TOK_ENUM) TOK_ENUM,
-  TOK_KEYOWRDS
+#define X(TOK_STR, TOK_ENUM, TOK_EVAL) TOK_ENUM,
+  TOK_KEYWORDS
 #undef X
 } TokenKeyword;
 

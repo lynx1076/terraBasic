@@ -19,24 +19,55 @@ ItpVar* itp_get_var(const Itp* itp, const Str* name) {
   RES_RETURN(r_ENO_DATA, NULL);
 }
 
-int handle_variable(Itp* itp) {
+int handle_keyword(Itp* itp) {
   ASSERT(itp);
 
   Vec* tokens = &((ItpLine*)vec_get(&itp->lines, itp->lineIndex))->tokens;
-  
   Token* token = vec_get(tokens, 0);
-  ASSERT(token->type == tt_Variable);
+  ASSERT(token->type == tt_Keyword);
 
-  ItpVar* var = itp_get_var(itp, &token->string);
+  switch (token->keyword) {
+#define X(TOK_STR, TOK_ENUM, TOK_EVAL) case TOK_ENUM: return TOK_EVAL(itp, stack, token);
+    TOK_KEYWORDS
+#undef X
+  default:
+    RES_RETURN(r_EUNREACHABLE, -1);
+  }
 
-  if (!var) {
-    if (str_cstr(&token->string)) return -1;
-    if (str_fmt_cstr(&itp->errorString, "\"%s\" is not a known variable", token->string.text)) return -1;
+  RES_RETURN(r_ENONE, 0);
+}
+
+int keyword_none(Itp* itp, Vec* tokens) {
+  (void)itp;
+  (void)tokens;
+
+  printf("Tried to evaluate keyword that should not be evaluated here!\n");
+  ASSERT(0);
+}
+
+int keyword_let(Itp* itp, Vec* tokens) {
+  ASSERT(itp);
+  ASSERT(tokens);
+
+  Token* var_tok = vec_get(tokens, 2);
+
+  if (var_tok->type == tt_Variable) {
+    if (str_cstr(&var_tok->string)) return -1;
+    if (str_fmt_cstr(&itp->errorString, "\"%s\" is not a variable", var_tok->string.text)) return -1;
 
     RES_RETURN(r_EINTERPRET, -1);
   }
 
-  token = vec_get(tokens, 1);
+  ItpVar* var = itp_get_var(itp, &var_tok->string);
+
+  if (!var) {
+    if (str_cstr(&var_tok->string)) return -1;
+    if (str_fmt_cstr(&itp->errorString, "\"%s\" is not a known variable", var_tok->string.text)) return -1;
+
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  Token* token = vec_get(tokens, 1);
   if (!token || token->type != tt_Operator || token->operator != to_Eq) {
     if (str_fmt_cstr(&itp->errorString, "Expected assignment after variable", token->string)) return -1;
     RES_RETURN(r_EINTERPRET, -1);
@@ -47,13 +78,33 @@ int handle_variable(Itp* itp) {
   RES_RETURN(r_ENONE, 0);
 }
 
-int handle_keyword(Itp* itp) {
-  ASSERT(itp);
+int keyword_print(Itp* itp, Vec* tokens) {
+}
 
-  Vec* tokens = &((ItpLine*)vec_get(&itp->lines, itp->lineIndex))->tokens;
-  Token* token = vec_get(tokens, 0);
-  ASSERT(token->type == tt_Keyword);
+int keyword_input(Itp* itp, Vec* tokens) {
+}
 
-  RES_RETURN(r_ENONE, 0);
+int keyword_goto(Itp* itp, Vec* tokens) {
+}
+
+int keyword_gosub(Itp* itp, Vec* tokens) {
+}
+
+int keyword_return(Itp* itp, Vec* tokens) {
+}
+
+int keyword_end(Itp* itp, Vec* tokens) {
+}
+
+int keyword_if(Itp* itp, Vec* tokens) {
+}
+
+int keyword_else(Itp* itp, Vec* tokens) {
+}
+
+int keyword_then(Itp* itp, Vec* tokens) {
+}
+
+int keyword_colon(Itp* itp, Vec* tokens) {
 }
 

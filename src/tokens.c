@@ -84,8 +84,8 @@ void tok_print(Token* token) {
 
 const char* tok_keyword_get_cstr(TokenKeyword tk) {
   switch (tk) {
-#define X(STR, ENUM) case ENUM: return STR;
-  TOK_KEYOWRDS
+#define X(TOK_STR, TOK_ENUM, TOK_EVAL) case TOK_ENUM: return TOK_STR;
+  TOK_KEYWORDS
 #undef X
   
   default: return "Unknown keyword";
@@ -115,8 +115,8 @@ TokenKeyword tok_get_keyword(const char* cstr, size_t len) {
   
   if (!len) RES_RETURN(r_ENONE, tk_None);
  
-#define X(KEYWORD, TOKEN_KEYWORD)   if (!strncicmp((KEYWORD), cstr, len)) RES_RETURN(r_ENONE, (TOKEN_KEYWORD));
-  TOK_KEYOWRDS
+#define X(TOK_STR, TOK_ENUM, TOK_EVAL)   if (!strncicmp((TOK_STR), cstr, len)) RES_RETURN(r_ENONE, (TOK_ENUM));
+  TOK_KEYWORDS
 #undef X
 
   RES_RETURN(r_ENONE, tk_None);
