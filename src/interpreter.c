@@ -62,7 +62,7 @@ int itp_line_add(Itp* itp, const Str* text, size_t line_num) {
   ASSERT(itp);
 
   ItpLine newLine;
-  ItpLine* newLinePtr;
+  ItpLine* newLinePtr = NULL;
 
   newLine.line_num = line_num;
   
@@ -80,6 +80,7 @@ int itp_line_add(Itp* itp, const Str* text, size_t line_num) {
       _line_free(line);
       *line = newLine;
       newLinePtr = line;
+      break;
     }
   }
 
@@ -95,13 +96,16 @@ int itp_interpret_line(Itp* itp, size_t i) {
   Token* token = vec_get(&line->tokens, 0);
 
   switch (token->type) {
-    case tt_Variable: {
-      if (handle_variable(itp)) return -1;
-    } break;
     case tt_Keyword: {
       if (handle_keyword(itp)) return -1;
     } break;
-    default: break;
+    case tt_Variable: {
+      if (handle_variable(itp)) return -1;
+    } break;
+    default: {
+      if (str_fmt_cstr(&itp->errorString, "Invalid token here: %s", tok_get_type_cstr(token->type))) return -1;
+      RES_RETURN(r_EINTERPRET, -1);
+    }
   }
   
   RES_RETURN(r_ENONE, 0);

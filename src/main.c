@@ -37,8 +37,8 @@ int main(int argc, char** argv) {
 
   while (true) {
     printf(">>>");
-    char* line;
-    size_t size;
+    char* line = NULL;
+    size_t size = 0;
     if (getline(&line, &size, stdin) < 0) {
       printf("Failed to get input\n");
       return -1;
@@ -52,7 +52,6 @@ int main(int argc, char** argv) {
       printf("Failed to add line: %s\n", itp.errorString.text);
       return _res;
     }
-    if (itp_print_line(&itp, 1)) return _res;
 
     if (itp_interpret_line(&itp, 0)) {
       if (str_cstr(&itp.errorString)) return _res;

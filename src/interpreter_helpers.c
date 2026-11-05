@@ -19,6 +19,39 @@ ItpVar* itp_get_var(const Itp* itp, const Str* name) {
   RES_RETURN(r_ENO_DATA, NULL);
 }
 
+int handle_variable(Itp* itp) {
+  ASSERT(itp);
+
+  Vec* tokens = &((ItpLine*)vec_get(&itp->lines, itp->lineIndex))->tokens;
+  Token* var_tok = vec_get(tokens, 0);
+
+  if (!var_tok || var_tok->type != tt_Variable) {
+    if (str_cstr(&var_tok->string)) return -1;
+    if (str_fmt_cstr(&itp->errorString, "\"%s\" is not a variable", var_tok->string.text)) return -1;
+
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  ItpVar* var = itp_get_var(itp, &var_tok->string);
+
+  if (!var) {
+    if (str_cstr(&var_tok->string)) return -1;
+    if (str_fmt_cstr(&itp->errorString, "\"%s\" is not a known variable", var_tok->string.text)) return -1;
+
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  Token* token_eq = vec_get(tokens, 1);
+  if (!token_eq || token_eq->type != tt_Operator || token_eq->operator != to_Eq) {
+    if (str_fmt_cstr(&itp->errorString, "Expected assignment after variable", token_eq->string)) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  if (evl_eval(itp, 2, tokens->count, &var->token)) return -1;
+
+  RES_RETURN(r_ENONE, 0);
+}
+
 int handle_keyword(Itp* itp) {
   ASSERT(itp);
 
@@ -27,7 +60,7 @@ int handle_keyword(Itp* itp) {
   ASSERT(token->type == tt_Keyword);
 
   switch (token->keyword) {
-#define X(TOK_STR, TOK_ENUM, TOK_EVAL) case TOK_ENUM: return TOK_EVAL(itp, stack, token);
+#define X(TOK_STR, TOK_ENUM, TOK_EVAL) case TOK_ENUM: return TOK_EVAL(itp, tokens);
     TOK_KEYWORDS
 #undef X
   default:
@@ -49,9 +82,14 @@ int keyword_let(Itp* itp, Vec* tokens) {
   ASSERT(itp);
   ASSERT(tokens);
 
-  Token* var_tok = vec_get(tokens, 2);
+  if (tokens->count <= 3) {
+    if (str_fmt_cstr(&itp->errorString, "Malformed assignment")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
 
-  if (var_tok->type == tt_Variable) {
+  Token* var_tok = vec_get(tokens, 1);
+
+  if (!var_tok || var_tok->type != tt_Variable) {
     if (str_cstr(&var_tok->string)) return -1;
     if (str_fmt_cstr(&itp->errorString, "\"%s\" is not a variable", var_tok->string.text)) return -1;
 
@@ -67,18 +105,29 @@ int keyword_let(Itp* itp, Vec* tokens) {
     RES_RETURN(r_EINTERPRET, -1);
   }
 
-  Token* token = vec_get(tokens, 1);
-  if (!token || token->type != tt_Operator || token->operator != to_Eq) {
-    if (str_fmt_cstr(&itp->errorString, "Expected assignment after variable", token->string)) return -1;
+  Token* token_eq = vec_get(tokens, 2);
+  if (!token_eq || token_eq->type != tt_Operator || token_eq->operator != to_Eq) {
+    if (str_fmt_cstr(&itp->errorString, "Expected assignment after variable", token_eq->string)) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
-  if (evl_eval(itp, 2, tokens->count, &var->token)) return -1;
+  if (evl_eval(itp, 3, tokens->count, &var->token)) return -1;
 
   RES_RETURN(r_ENONE, 0);
 }
 
 int keyword_print(Itp* itp, Vec* tokens) {
+  ASSERT(itp);
+  ASSERT(tokens);
+
+  Token print_tok;
+
+  if (evl_eval(itp, 1, tokens->count, &print_tok)) return -1;
+  tok_print_value(&print_tok);
+  printf("\n");
+  tok_free(&print_tok);
+
+  RES_RETURN(r_ENONE, 0);
 }
 
 int keyword_input(Itp* itp, Vec* tokens) {

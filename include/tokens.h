@@ -120,4 +120,6 @@ TokenOperator tok_get_operator(const char* cstr, size_t max_len);
 TokenFunction tok_get_function(const char* cstr, size_t len);
 int tok_get_operator_precedence(TokenOperator op);
 
+int tok_print_value(Token* token);
+
 #endif

@@ -185,3 +185,26 @@ int tok_get_operator_precedence(TokenOperator op) {
   }
 }
 
+int tok_print_value(Token* token) {
+  ASSERT(token);
+
+  switch (token->type) {
+    case tt_Variable:
+    case tt_String: {
+      if (str_cstr(&token->string)) return -1;
+      printf("%s", token->string.text);
+    } break;
+    case tt_Float: {
+      printf("%f", token->_float);
+    } break;
+    case tt_Long: {
+      printf("%li", token->_long);
+    } break;
+    default: {
+      printf("Not a data token");
+    } break;
+  }
+
+  RES_RETURN(r_ENONE, 0);
+}
+

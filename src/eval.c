@@ -25,15 +25,12 @@ int evl_eval(Itp* itp, size_t start, size_t stop, Token* res) {
 
   if (_get_rpn(itp, start, stop, &rpn)) return -1;
 
-  printf("\nRPN\n");
+  if (_eval_rpn(itp, &rpn, res)) return -1;
+
   for (size_t i = 0; i < rpn.count; i++) {
     Token* tok = vec_get(&rpn, i);
-    printf("[%zu] ", i);
-    tok_print(tok);
-    printf("\n");
+    tok_free(tok);
   }
-
-  if (_eval_rpn(itp, &rpn, res)) return -1;
 
   RES_RETURN(r_ENONE, 0);
 }
@@ -47,17 +44,19 @@ int _eval_rpn(Itp* itp, Vec* rpn, Token* res) {
 
   for (size_t i = 0; i < rpn->count; i++) {
     Token* token = vec_get(rpn, i);
+    Token cpy;
+
     if (token->type == tt_Operator) {
       if (evl_eval_op(itp, token, &stack)) return -1;
     } else if (token->type == tt_Function) {
       if (evl_eval_func(itp, token, &stack)) return -1;
     } else if (token->type == tt_Variable) {
       Token* var = &itp_get_var(itp, &token->string)->token;
-      Token tok;
-      if (tok_duplicate(&tok, var)) return -1;
-      if (vec_push(&stack, &tok)) return -1;
+      if (tok_duplicate(&cpy, var)) return -1;
+      if (vec_push(&stack, &cpy)) return -1;
     } else {
-      if (vec_push(&stack, token)) return -1;
+      if (tok_duplicate(&cpy, token)) return -1;
+      if (vec_push(&stack, &cpy)) return -1;
     }
   }
 
