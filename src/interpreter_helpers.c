@@ -43,7 +43,7 @@ int handle_variable(Itp* itp) {
 
   Token* token_eq = vec_get(tokens, 1);
   if (!token_eq || token_eq->type != tt_Operator || token_eq->operator != to_Eq) {
-    if (str_fmt_cstr(&itp->errorString, "Expected assignment after variable", token_eq->string)) return -1;
+    if (str_fmt_cstr(&itp->errorString, "Expected assignment after variable")) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -112,6 +112,24 @@ int keyword_let(Itp* itp, Vec* tokens) {
   }
 
   if (evl_eval(itp, 3, tokens->count, &var->token)) return -1;
+
+  RES_RETURN(r_ENONE, 0);
+}
+
+int keyword_dim(Itp* itp, Vec* tokens) {
+  ASSERT(itp);
+  ASSERT(tokens);
+
+  Token* var_tok = vec_get(tokens, 1);
+
+  if (!var_tok || var_tok->type != tt_Variable) {
+    if (str_cstr(&var_tok->string)) return -1;
+    if (str_fmt_cstr(&itp->errorString, "\"%s\" is not a variable name", var_tok->string.text)) return -1;
+
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  if (itp_var_add(itp, &var_tok->string, NULL)) return -1;
 
   RES_RETURN(r_ENONE, 0);
 }

@@ -9,6 +9,7 @@ int handle_variable(Itp* itp);
 
 int keyword_none(Itp* itp, Vec* tokens);
 int keyword_let(Itp* itp, Vec* tokens);
+int keyword_dim(Itp* itp, Vec* tokens);
 int keyword_print(Itp* itp, Vec* tokens);
 int keyword_input(Itp* itp, Vec* tokens);
 int keyword_goto(Itp* itp, Vec* tokens);

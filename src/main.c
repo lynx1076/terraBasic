@@ -15,50 +15,25 @@ int main(int argc, char** argv) {
   (void)argc;
   (void)argv;
 
-  Vec tokens;
-  if (vec_init(&tokens, sizeof(Token))) return _res;
-
   Str error;
-
   if (str_init_cstr(&error, "Unknown error")) return _res;
 
   Itp itp;
   if (itp_init(&itp)) return _res;
 
-  Str line_str;
-  if (str_init(&line_str)) return _res;
-
-  ItpVar var;
-  if (str_init_cstr(&var.name, "a")) return _res;
-  var.token.type = tt_Float;
-  var.token._float = 20;
-
-  if (vec_push(&itp.variables, &var)) return _res;
+  Str input_str;
+  if (str_init(&input_str)) return _res;
 
   while (true) {
-    printf(">>>");
-    char* line = NULL;
-    size_t size = 0;
-    if (getline(&line, &size, stdin) < 0) {
-      printf("Failed to get input\n");
-      return -1;
-    }
-
-    if (str_cpy_cstr(&line_str, line)) return _res;
-    free(line);
-
-    if (itp_line_add(&itp, &line_str, 1)) {
-      if (str_cstr(&itp.errorString)) return _res;
-      printf("Failed to add line: %s\n", itp.errorString.text);
-      return _res;
-    }
-
-    if (itp_interpret_line(&itp, 0)) {
+    if (itp_shell(&itp)) {
       if (str_cstr(&itp.errorString)) return _res;
       printf("Failed to interpret line: %s\n", itp.errorString.text);
-      return _res;
     }
   }
+
+  itp_free(&itp);
+  str_free(&error);
+  str_free(&input_str);
 
   return 0;
 }

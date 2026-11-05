@@ -60,7 +60,6 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
     .index = 0,
   };
 
-
   while (!_eol_reached(&lstate)) {
     char c = _get_cursor(&lstate, 0);
 

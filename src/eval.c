@@ -27,10 +27,7 @@ int evl_eval(Itp* itp, size_t start, size_t stop, Token* res) {
 
   if (_eval_rpn(itp, &rpn, res)) return -1;
 
-  for (size_t i = 0; i < rpn.count; i++) {
-    Token* tok = vec_get(&rpn, i);
-    tok_free(tok);
-  }
+  vec_free(&rpn);
 
   RES_RETURN(r_ENONE, 0);
 }
@@ -212,6 +209,8 @@ int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn) {
       RES_RETURN(r_EINTERPRET, -1);
     }
   }
+
+  vec_free(&stack);
 
   RES_RETURN(r_ENONE, 0);
 }

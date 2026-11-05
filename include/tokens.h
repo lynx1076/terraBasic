@@ -30,6 +30,7 @@
 #define TOK_KEYWORDS \
   X("REM", tk_Rem, keyword_none) \
   X("LET", tk_Let, keyword_let) \
+  X("DIM", tk_Dim, keyword_dim) \
   X("PRINT", tk_Print, keyword_print) \
   X("INPUT", tk_Input, keyword_input) \
   X("GOTO", tk_Goto, keyword_goto) \

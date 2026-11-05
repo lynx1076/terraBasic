@@ -146,6 +146,8 @@ int _tok_try_operator(const char* cstr, size_t max_len, const char* suspect_cstr
     match_len++;
   }
 
+  if (*suspect_cstr != '\0') return 0;
+
   if (str_op && (isalpha(*cstr) || *cstr == '_')) return 0;
   return match_len;
 }
@@ -159,7 +161,7 @@ TokenOperator tok_get_operator(const char* cstr, size_t max_len) {
 
 #define X(TOK_STR, TOK_ENUM, TOK_EVAL) \
   new_match = _tok_try_operator(cstr, max_len, (TOK_STR)); \
-  if (new_match && new_match > longest_match) { \
+  if (new_match != to_None && new_match > longest_match) { \
     longest_match = new_match; \
     op = TOK_ENUM; \
   }
@@ -201,7 +203,7 @@ int tok_print_value(Token* token) {
       printf("%li", token->_long);
     } break;
     default: {
-      printf("Not a data token");
+      printf("Undefined");
     } break;
   }
 

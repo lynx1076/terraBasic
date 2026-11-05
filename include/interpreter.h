@@ -26,9 +26,12 @@ typedef struct {
 
 int itp_init(Itp* itp);
 void itp_free(Itp* itp);
+ItpLine* ipt_get_line(Itp* itp, size_t line_num);
 
+int itp_var_add(Itp* itp, Str* name, Token* token);
 int itp_line_add(Itp* itp, const Str* text, size_t line_num);
-int itp_interpret_line(Itp* itp, size_t i);
+int itp_shell(Itp* itp);
+int itp_interpret_line(Itp* itp, ItpLine* line);
 int itp_print_line(Itp* itp, size_t line_num);
 
 #endif
