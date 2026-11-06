@@ -59,8 +59,11 @@ int itp_init(Itp* itp) {
   if (vec_init(&itp->lines, sizeof(ItpLine))) return -1;
   if (vec_init(&itp->variables, sizeof(ItpVar))) return -1;
 
-  itp->lineIndex = 0;
+  itp->line_index = 0;
   if (str_init_cstr(&itp->errorString, "Unknown error")) return -1;
+
+  itp->current_line = NULL;
+  itp->running = false;
   
   RES_RETURN(r_ENONE, 0);
 }
@@ -130,6 +133,21 @@ int itp_line_add(Itp* itp, const Str* text, size_t line_num) {
 int itp_shell(Itp* itp) {
   ASSERT(itp);
 
+  if (itp->running) {
+    itp->current_line = vec_get(&itp->lines, itp->line_index);
+    if (itp_interpret_line(itp)) return -1;
+
+    if (!itp->jumped) itp->line_index++;
+    else itp->jumped = false;
+
+    if (itp->line_index >= itp->lines.count) {
+      itp->running = false;
+      printf("Done\n");
+    }
+
+    RES_RETURN(r_ENONE, 0);
+  }
+
   Str input_str;
   if (str_init(&input_str)) return _res;
 
@@ -165,6 +183,7 @@ int itp_shell(Itp* itp) {
     for (size_t i = 0; i <= itp->lines.count; i++) {
       ItpLine* line_check = vec_get(&itp->lines, i);
 
+      new_line.line_num = line_num;
       if (!line_check || (size_t)line_num < line_check->line_num) {
         if (vec_push_to(&itp->lines, i, &new_line)) return -1;
         break;
@@ -175,15 +194,17 @@ int itp_shell(Itp* itp) {
       }
     }
   } else {
-    if (itp_interpret_line(itp, &new_line)) return -1;
+    itp->current_line = &new_line;
+    if (itp_interpret_line(itp)) return -1;
     _line_free(&new_line);
   }
   RES_RETURN(r_ENONE, 0);
 }
 
-int itp_interpret_line(Itp* itp, ItpLine* line) {
+int itp_interpret_line(Itp* itp) {
   ASSERT(itp);
-  ASSERT(line);
+
+  ItpLine* line = itp->current_line;
 
   Token* token = vec_get(&line->tokens, 0);
 

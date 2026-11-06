@@ -4,10 +4,12 @@
 #include "interpreter.h"
 
 ItpVar* itp_get_var(const Itp* itp, const Str* name);
-int handle_keyword(Itp* itp);
 int handle_variable(Itp* itp);
+int handle_keyword(Itp* itp);
 
 int keyword_none(Itp* itp, Vec* tokens);
+int keyword_list(Itp* itp, Vec* tokens);
+int keyword_run(Itp* itp, Vec* tokens);
 int keyword_let(Itp* itp, Vec* tokens);
 int keyword_dim(Itp* itp, Vec* tokens);
 int keyword_print(Itp* itp, Vec* tokens);

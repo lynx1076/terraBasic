@@ -6,6 +6,8 @@
 #include "str.h"
 #include "tokens.h"
 #include "vector.h"
+#include <stddef.h>
+#include <stdio.h>
 
 ItpVar* itp_get_var(const Itp* itp, const Str* name) {
   ASSERT(itp);
@@ -22,7 +24,7 @@ ItpVar* itp_get_var(const Itp* itp, const Str* name) {
 int handle_variable(Itp* itp) {
   ASSERT(itp);
 
-  Vec* tokens = &((ItpLine*)vec_get(&itp->lines, itp->lineIndex))->tokens;
+  Vec* tokens = &itp->current_line->tokens;
   Token* var_tok = vec_get(tokens, 0);
 
   if (!var_tok || var_tok->type != tt_Variable) {
@@ -55,7 +57,7 @@ int handle_variable(Itp* itp) {
 int handle_keyword(Itp* itp) {
   ASSERT(itp);
 
-  Vec* tokens = &((ItpLine*)vec_get(&itp->lines, itp->lineIndex))->tokens;
+  Vec* tokens = &itp->current_line->tokens;
   Token* token = vec_get(tokens, 0);
   ASSERT(token->type == tt_Keyword);
 
@@ -76,6 +78,45 @@ int keyword_none(Itp* itp, Vec* tokens) {
 
   printf("Tried to evaluate keyword that should not be evaluated here!\n");
   ASSERT(0);
+}
+
+int keyword_list(Itp* itp, Vec* tokens) {
+  ASSERT(itp);
+  ASSERT(tokens);
+
+  printf("%zu line%s:\n", itp->lines.count, itp->lines.count == 1 ? "" : "s");
+  for (size_t i = 0; i < itp->lines.count; i++) {
+    ItpLine* line = vec_get(&itp->lines, i);
+    if (str_cstr(&line->text)) return -1;
+    printf("%s\n", line->text.text);
+  }
+  printf("Done\n");
+
+  RES_RETURN(r_ENONE, 0);
+}
+
+int keyword_run(Itp* itp, Vec* tokens) {
+  ASSERT(itp);
+  ASSERT(tokens);
+
+  if (itp->running) {
+    if (str_cpy_cstr(&itp->errorString, "Cannot run program from within itsself")) return -1;
+    itp->running = false;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  if (itp->lines.count == 0) {
+    if (str_cpy_cstr(&itp->errorString, "Cannot run empty program")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  itp->line_index = 0;
+  itp->current_line = vec_get(&itp->lines, 0);
+
+  itp->jumped = false;
+  itp->running = true;
+
+  RES_RETURN(r_ENONE, 0);
 }
 
 int keyword_let(Itp* itp, Vec* tokens) {

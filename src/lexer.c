@@ -76,8 +76,10 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
       while (isalnum(c) && !_eol_reached(&lstate)) c = _move_cursor(&lstate, 1);
 
       _move_cursor(&lstate, -1);
+
+      size_t len = lstate.index - tokenStart + 1;
       
-      token.keyword = tok_get_keyword(lstate.line->text + tokenStart, lstate.index - tokenStart);
+      token.keyword = tok_get_keyword(lstate.line->text + tokenStart, len);
       if (token.keyword != tk_None) {
         token.type = tt_Keyword;
       } else {

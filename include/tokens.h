@@ -29,6 +29,8 @@
 
 #define TOK_KEYWORDS \
   X("REM", tk_Rem, keyword_none) \
+  X("LIST", tk_List, keyword_list) \
+  X("RUN", tk_Run, keyword_run) \
   X("LET", tk_Let, keyword_let) \
   X("DIM", tk_Dim, keyword_dim) \
   X("PRINT", tk_Print, keyword_print) \

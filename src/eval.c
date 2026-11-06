@@ -48,8 +48,13 @@ int _eval_rpn(Itp* itp, Vec* rpn, Token* res) {
     } else if (token->type == tt_Function) {
       if (evl_eval_func(itp, token, &stack)) return -1;
     } else if (token->type == tt_Variable) {
-      Token* var = &itp_get_var(itp, &token->string)->token;
-      if (tok_duplicate(&cpy, var)) return -1;
+      ItpVar* var = itp_get_var(itp, &token->string);
+      if (!var || var->token.type == tt_None) {
+        if (str_cstr(&token->string)) return -1;
+        if (str_fmt_cstr(&itp->errorString, "Cannot evaluate: \"%s\" is undefined", token->string.text)) return -1;
+        RES_RETURN(r_EINTERPRET, -1);
+      }
+      if (tok_duplicate(&cpy, &var->token)) return -1;
       if (vec_push(&stack, &cpy)) return -1;
     } else {
       if (tok_duplicate(&cpy, token)) return -1;
@@ -90,7 +95,7 @@ int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn) {
 
   size_t i = start;
 
-  Vec* tokens = &((ItpLine*)vec_get(&itp->lines, itp->lineIndex))->tokens;
+  Vec* tokens = &itp->current_line->tokens;
   Token* token = vec_get(tokens, i);
   Token* last_token = NULL;
 
