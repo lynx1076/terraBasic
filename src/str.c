@@ -312,3 +312,13 @@ void str_to_lower(Str* str) {
   }
 }
 
+int str_get_line(Str* str) {
+  ASSERT(str);
+
+  str->length = getline(&str->text, &str->capacity, stdin) - 1;
+  if (str->length < 0) RES_RETURN(r_EUNKNOWN, -1);
+  str->text[str->length] = '\0';
+
+  RES_RETURN(r_ENONE, 0);
+}
+

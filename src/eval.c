@@ -51,7 +51,7 @@ int _eval_rpn(Itp* itp, Vec* rpn, Token* res) {
       ItpVar* var = itp_get_var(itp, &token->string);
       if (!var || var->token.type == tt_None) {
         if (str_cstr(&token->string)) return -1;
-        if (str_fmt_cstr(&itp->errorString, "Cannot evaluate: \"%s\" is undefined", token->string.text)) return -1;
+        if (str_fmt_cstr(&itp->error_string, "Cannot evaluate: \"%s\" is undefined", token->string.text)) return -1;
         RES_RETURN(r_EINTERPRET, -1);
       }
       if (tok_duplicate(&cpy, &var->token)) return -1;
@@ -109,7 +109,7 @@ int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn) {
       case tt_Function: {
         Token* nextTok = vec_get(tokens, i + 1);
         if (!nextTok || nextTok->type != tt_Operator || nextTok->operator != to_LParen) {
-          if (str_cpy_cstr(&itp->errorString, "Expected parenthesis after function declaration")) return -1;
+          if (str_cpy_cstr(&itp->error_string, "Expected parenthesis after function declaration")) return -1;
           RES_RETURN(r_EINTERPRET, -1);
         }
         function_depth++;
@@ -153,7 +153,7 @@ int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn) {
           }
 
           if (no_open) {
-            if (str_cpy_cstr(&itp->errorString, "Missing opening parenthesis")) return -1;
+            if (str_cpy_cstr(&itp->error_string, "Missing opening parenthesis")) return -1;
             RES_RETURN(r_ENONE, -1);
           }
           
@@ -169,7 +169,7 @@ int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn) {
           if (vec_push(&stack, token)) return -1;
         } else if (token->operator == to_Comma) {
           if (function_depth == 0) {
-            if (str_cpy_cstr(&itp->errorString, "Cannot have comma outside function parameter list")) return -1;
+            if (str_cpy_cstr(&itp->error_string, "Cannot have comma outside function parameter list")) return -1;
             RES_RETURN(r_EINTERPRET, -1);
           }
 
@@ -197,7 +197,7 @@ int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn) {
         }
       } break;
       default: {
-        if (str_fmt_cstr(&itp->errorString, "%s not allowed here", tok_get_type_cstr(token->type))) return -1;
+        if (str_fmt_cstr(&itp->error_string, "%s not allowed here", tok_get_type_cstr(token->type))) return -1;
       } RES_RETURN(r_EINTERPRET, -1);
     }
 
@@ -210,7 +210,7 @@ int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn) {
     vec_pop(&stack, &tok);
     if (vec_push(rpn, &tok)) return -1;
     if (tok.operator == to_LParen) {
-      if (str_cpy_cstr(&itp->errorString, "Missing closing parenthesis")) return -1;
+      if (str_cpy_cstr(&itp->error_string, "Missing closing parenthesis")) return -1;
       RES_RETURN(r_EINTERPRET, -1);
     }
   }

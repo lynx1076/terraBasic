@@ -43,4 +43,6 @@ int str_replace(Str* str, const Str* strPattern, const Str* strNew);
 void str_to_upper(Str* str);
 void str_to_lower(Str* str);
 
+int str_get_line(Str* str);
+
 #endif

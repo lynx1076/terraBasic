@@ -29,7 +29,7 @@ int handle_variable(Itp* itp) {
 
   if (!var_tok || var_tok->type != tt_Variable) {
     if (str_cstr(&var_tok->string)) return -1;
-    if (str_fmt_cstr(&itp->errorString, "\"%s\" is not a variable", var_tok->string.text)) return -1;
+    if (str_fmt_cstr(&itp->error_string, "\"%s\" is not a variable", var_tok->string.text)) return -1;
 
     RES_RETURN(r_EINTERPRET, -1);
   }
@@ -38,14 +38,14 @@ int handle_variable(Itp* itp) {
 
   if (!var) {
     if (str_cstr(&var_tok->string)) return -1;
-    if (str_fmt_cstr(&itp->errorString, "\"%s\" is not a known variable", var_tok->string.text)) return -1;
+    if (str_fmt_cstr(&itp->error_string, "\"%s\" is not a known variable", var_tok->string.text)) return -1;
 
     RES_RETURN(r_EINTERPRET, -1);
   }
 
   Token* token_eq = vec_get(tokens, 1);
   if (!token_eq || token_eq->type != tt_Operator || token_eq->operator != to_Eq) {
-    if (str_fmt_cstr(&itp->errorString, "Expected assignment after variable")) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Expected assignment after variable")) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -84,6 +84,29 @@ int keyword_list(Itp* itp, Vec* tokens) {
   ASSERT(itp);
   ASSERT(tokens);
 
+  if (itp->running) {
+    if (str_cpy_cstr(&itp->error_string, "Cannot list program from within itsself")) return -1;
+    itp->running = false;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  if (tokens->count == 2) {
+    Token* num_tok = vec_get(tokens, 1);
+    if (num_tok->type != tt_Long || num_tok->_long < 0) {
+      if (str_cpy_cstr(&itp->error_string, "Not a valid line number")) return -1;
+      RES_RETURN(r_EINTERPRET, -1);
+    }
+    ItpLine* line = itp_get_line(itp, num_tok->_long, NULL);
+    if (!line) printf("Line is not defined\n");
+    else {
+      printf("%s\n", line->text.text);
+    }
+    RES_RETURN(r_ENONE, 0);
+  } else if (tokens->count != 1) {
+    if (str_cpy_cstr(&itp->error_string, "Expected either no args or single line number")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
   printf("%zu line%s:\n", itp->lines.count, itp->lines.count == 1 ? "" : "s");
   for (size_t i = 0; i < itp->lines.count; i++) {
     ItpLine* line = vec_get(&itp->lines, i);
@@ -100,13 +123,13 @@ int keyword_run(Itp* itp, Vec* tokens) {
   ASSERT(tokens);
 
   if (itp->running) {
-    if (str_cpy_cstr(&itp->errorString, "Cannot run program from within itsself")) return -1;
+    if (str_cpy_cstr(&itp->error_string, "Cannot run program from within itsself")) return -1;
     itp->running = false;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
   if (itp->lines.count == 0) {
-    if (str_cpy_cstr(&itp->errorString, "Cannot run empty program")) return -1;
+    if (str_cpy_cstr(&itp->error_string, "Cannot run empty program")) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -116,6 +139,8 @@ int keyword_run(Itp* itp, Vec* tokens) {
   itp->jumped = false;
   itp->running = true;
 
+  if (itp_clear(itp)) return -1;
+
   RES_RETURN(r_ENONE, 0);
 }
 
@@ -124,7 +149,7 @@ int keyword_let(Itp* itp, Vec* tokens) {
   ASSERT(tokens);
 
   if (tokens->count <= 3) {
-    if (str_fmt_cstr(&itp->errorString, "Malformed assignment")) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Malformed assignment")) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -132,7 +157,7 @@ int keyword_let(Itp* itp, Vec* tokens) {
 
   if (!var_tok || var_tok->type != tt_Variable) {
     if (str_cstr(&var_tok->string)) return -1;
-    if (str_fmt_cstr(&itp->errorString, "\"%s\" is not a variable", var_tok->string.text)) return -1;
+    if (str_fmt_cstr(&itp->error_string, "\"%s\" is not a variable", var_tok->string.text)) return -1;
 
     RES_RETURN(r_EINTERPRET, -1);
   }
@@ -141,14 +166,14 @@ int keyword_let(Itp* itp, Vec* tokens) {
 
   if (!var) {
     if (str_cstr(&var_tok->string)) return -1;
-    if (str_fmt_cstr(&itp->errorString, "\"%s\" is not a known variable", var_tok->string.text)) return -1;
+    if (str_fmt_cstr(&itp->error_string, "\"%s\" is not a known variable", var_tok->string.text)) return -1;
 
     RES_RETURN(r_EINTERPRET, -1);
   }
 
   Token* token_eq = vec_get(tokens, 2);
   if (!token_eq || token_eq->type != tt_Operator || token_eq->operator != to_Eq) {
-    if (str_fmt_cstr(&itp->errorString, "Expected assignment after variable", token_eq->string)) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Expected assignment after variable", token_eq->string)) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -165,7 +190,7 @@ int keyword_dim(Itp* itp, Vec* tokens) {
 
   if (!var_tok || var_tok->type != tt_Variable) {
     if (str_cstr(&var_tok->string)) return -1;
-    if (str_fmt_cstr(&itp->errorString, "\"%s\" is not a variable name", var_tok->string.text)) return -1;
+    if (str_fmt_cstr(&itp->error_string, "\"%s\" is not a variable name", var_tok->string.text)) return -1;
 
     RES_RETURN(r_EINTERPRET, -1);
   }
@@ -190,18 +215,82 @@ int keyword_print(Itp* itp, Vec* tokens) {
 }
 
 int keyword_input(Itp* itp, Vec* tokens) {
+  ASSERT(itp);
+  ASSERT(tokens);
+
+  Token* prompt_tok = vec_get(tokens, 1);
+  
+  size_t i = 2;
+  Token* next_tok = vec_get(tokens, i);
+  while (next_tok)
 }
 
 int keyword_goto(Itp* itp, Vec* tokens) {
+  ASSERT(itp);
+  ASSERT(tokens);
+
+  Token* line_tok = vec_get(tokens, 1);
+  if (!line_tok || line_tok->type != tt_Long || line_tok->_long < 0) {
+    if (str_cpy_cstr(&itp->error_string, "Invalid line number")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  ItpLine* line = itp_get_line(itp, line_tok->_long, &itp->line_index);
+  if (!line) {
+    if (str_cpy_cstr(&itp->error_string, "Invalid line number")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  itp->jumped = true;
+  RES_RETURN(r_ENONE, 0);
 }
 
 int keyword_gosub(Itp* itp, Vec* tokens) {
+  ASSERT(itp);
+  ASSERT(tokens);
+
+  Token* line_tok = vec_get(tokens, 1);
+  if (!line_tok || line_tok->type != tt_Long || line_tok->_long < 0) {
+    if (str_cpy_cstr(&itp->error_string, "Invalid line number")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  if (vec_push(&itp->sub_stack, &itp->line_index)) return -1;
+
+  ItpLine* line = itp_get_line(itp, line_tok->_long, &itp->line_index);
+  if (!line) {
+    if (str_cpy_cstr(&itp->error_string, "Invalid line number")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  itp->jumped = true;
+  RES_RETURN(r_ENONE, 0);
 }
 
 int keyword_return(Itp* itp, Vec* tokens) {
+  ASSERT(itp);
+  ASSERT(tokens);
+
+  if (itp->sub_stack.count == 0) {
+    if (str_cpy_cstr(&itp->error_string, "Cannot return, not in subroutine")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  if (vec_pop(&itp->sub_stack, &itp->line_index)) return -1;
+
+  itp->jumped = true;
+  RES_RETURN(r_ENONE, 0);
 }
 
 int keyword_end(Itp* itp, Vec* tokens) {
+  ASSERT(itp);
+  ASSERT(tokens);
+
+  if (!itp->running) printf("Program is not running\n");
+
+  itp->running = false;
+
+  RES_RETURN(r_ENONE, 0);
 }
 
 int keyword_if(Itp* itp, Vec* tokens) {

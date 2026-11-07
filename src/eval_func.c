@@ -32,7 +32,7 @@ int eval_sin(Itp* itp, Vec* stack, Token* token) {
   ASSERT(stack->count >= 1);
 
   if (token->func.argCount != 1) {
-    if (str_fmt_cstr(&itp->errorString, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -42,7 +42,7 @@ int eval_sin(Itp* itp, Vec* stack, Token* token) {
   if (vec_pop(stack, &rtok)) return -1;
 
   if (rtok.type != tt_Long && rtok.type != tt_Float) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -69,7 +69,7 @@ int eval_cos(Itp* itp, Vec* stack, Token* token) {
   ASSERT(stack->count >= 1);
 
   if (token->func.argCount != 1) {
-    if (str_fmt_cstr(&itp->errorString, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -79,7 +79,7 @@ int eval_cos(Itp* itp, Vec* stack, Token* token) {
   if (vec_pop(stack, &rtok)) return -1;
 
   if (rtok.type != tt_Long && rtok.type != tt_Float) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -106,7 +106,7 @@ int eval_tan(Itp* itp, Vec* stack, Token* token) {
   ASSERT(stack->count >= 1);
 
   if (token->func.argCount != 1) {
-    if (str_fmt_cstr(&itp->errorString, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -116,7 +116,7 @@ int eval_tan(Itp* itp, Vec* stack, Token* token) {
   if (vec_pop(stack, &rtok)) return -1;
 
   if (rtok.type != tt_Long && rtok.type != tt_Float) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -143,7 +143,7 @@ int eval_asin(Itp* itp, Vec* stack, Token* token) {
   ASSERT(stack->count >= 1);
 
   if (token->func.argCount != 1) {
-    if (str_fmt_cstr(&itp->errorString, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -153,7 +153,7 @@ int eval_asin(Itp* itp, Vec* stack, Token* token) {
   if (vec_pop(stack, &rtok)) return -1;
 
   if (rtok.type != tt_Long && rtok.type != tt_Float) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -180,7 +180,7 @@ int eval_acos(Itp* itp, Vec* stack, Token* token) {
   ASSERT(stack->count >= 1);
 
   if (token->func.argCount != 1) {
-    if (str_fmt_cstr(&itp->errorString, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -190,7 +190,7 @@ int eval_acos(Itp* itp, Vec* stack, Token* token) {
   if (vec_pop(stack, &rtok)) return -1;
 
   if (rtok.type != tt_Long && rtok.type != tt_Float) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -217,7 +217,7 @@ int eval_atan(Itp* itp, Vec* stack, Token* token) {
   ASSERT(stack->count >= 1);
 
   if (token->func.argCount != 1) {
-    if (str_fmt_cstr(&itp->errorString, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -227,7 +227,7 @@ int eval_atan(Itp* itp, Vec* stack, Token* token) {
   if (vec_pop(stack, &rtok)) return -1;
 
   if (rtok.type != tt_Long && rtok.type != tt_Float) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -254,7 +254,7 @@ int eval_abs(Itp* itp, Vec* stack, Token* token) {
   ASSERT(stack->count >= 1);
 
   if (token->func.argCount != 1) {
-    if (str_fmt_cstr(&itp->errorString, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -264,12 +264,12 @@ int eval_abs(Itp* itp, Vec* stack, Token* token) {
   if (vec_pop(stack, &rtok)) return -1;
 
   if (rtok.type != tt_Long && rtok.type != tt_Float) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
   if (rtok.type != tt_Long && rtok.type != tt_Float) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot get abs of %s", tok_get_type_cstr(rtok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot get abs of %s", tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -301,7 +301,7 @@ int eval_left(Itp* itp, Vec* stack, Token* token) {
   ASSERT(stack->count >= 2);
 
   if (token->func.argCount != 2) {
-    if (str_fmt_cstr(&itp->errorString, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -314,12 +314,12 @@ int eval_left(Itp* itp, Vec* stack, Token* token) {
   if (vec_pop(stack, &str_tok)) return -1;
 
   if (numTok.type != tt_Long) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot get %s with %s, need int", tok_function_get_cstr(token->func.func), tok_get_type_cstr(numTok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s with %s, need int", tok_function_get_cstr(token->func.func), tok_get_type_cstr(numTok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
   if (str_tok.type != tt_String) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot get %s with %s, need string", tok_function_get_cstr(token->func.func), tok_get_type_cstr(str_tok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s with %s, need string", tok_function_get_cstr(token->func.func), tok_get_type_cstr(str_tok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -345,7 +345,7 @@ int eval_right(Itp* itp, Vec* stack, Token* token) {
   ASSERT(stack->count >= 2);
 
   if (token->func.argCount != 2) {
-    if (str_fmt_cstr(&itp->errorString, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -358,12 +358,12 @@ int eval_right(Itp* itp, Vec* stack, Token* token) {
   if (vec_pop(stack, &str_tok)) return -1;
 
   if (numTok.type != tt_Long) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot get %s with %s, need int", tok_function_get_cstr(token->func.func), tok_get_type_cstr(numTok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s with %s, need int", tok_function_get_cstr(token->func.func), tok_get_type_cstr(numTok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
   if (str_tok.type != tt_String) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot get %s with %s, need string", tok_function_get_cstr(token->func.func), tok_get_type_cstr(str_tok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s with %s, need string", tok_function_get_cstr(token->func.func), tok_get_type_cstr(str_tok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -400,18 +400,18 @@ int eval_mid(Itp* itp, Vec* stack, Token* token) {
     if (lenTok.type == tt_Long) {
       len = lenTok._long;
     } else {
-      if (str_fmt_cstr(&itp->errorString, "Cannot get %s with %s, need int", tok_function_get_cstr(token->func.func), tok_get_type_cstr(lenTok.type))) return -1;
+      if (str_fmt_cstr(&itp->error_string, "Cannot get %s with %s, need int", tok_function_get_cstr(token->func.func), tok_get_type_cstr(lenTok.type))) return -1;
       RES_RETURN(r_EINTERPRET, -1);
     }
   } else if (token->func.argCount != 2) {
-    if (str_fmt_cstr(&itp->errorString, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
   Token start_tok;
   if (vec_pop(stack, &start_tok)) return -1;
   if (start_tok.type != tt_Long) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot get %s with %s, need int",
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s with %s, need int",
         tok_function_get_cstr(token->func.func), tok_get_type_cstr(start_tok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
@@ -419,7 +419,7 @@ int eval_mid(Itp* itp, Vec* stack, Token* token) {
   Token str_tok;
   if (vec_pop(stack, &str_tok)) return -1;
   if (str_tok.type != tt_String) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot get %s with %s, need string",
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s with %s, need string",
         tok_function_get_cstr(token->func.func), tok_get_type_cstr(str_tok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }

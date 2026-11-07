@@ -10,16 +10,6 @@
 char* window_title = "terraTree";
 Itp itp;
 
-void sigint_handler(int sig) {
-  (void)sig;
-
-  if (itp.running) {
-    itp.running = false;
-  } else {
-    exit(0);
-  }
-}
-
 int main(int argc, char** argv) {
   (void)argc;
   (void)argv;
@@ -30,8 +20,7 @@ int main(int argc, char** argv) {
 
   while (true) {
     if (itp_shell(&itp)) {
-      if (str_cstr(&itp.errorString)) return _res;
-      printf("Error: %s\n", itp.errorString.text);
+      continue;
     }
   }
 

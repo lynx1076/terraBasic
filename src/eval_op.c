@@ -45,7 +45,7 @@ int eval_plus(Itp* itp, Vec* stack) {
 
   if ((rtok.type != tt_Long && rtok.type != tt_Float && rtok.type != tt_String) ||
       (ltok.type != tt_Long && ltok.type != tt_Float && ltok.type != tt_String)) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot add %s and %s", 
+    if (str_fmt_cstr(&itp->error_string, "Cannot add %s and %s", 
         tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
@@ -122,7 +122,7 @@ int eval_minus(Itp* itp, Vec* stack) {
 
   if ((rtok.type != tt_Long && rtok.type != tt_Float) ||
       (ltok.type != tt_Long && ltok.type != tt_Float)) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot subtract %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot subtract %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -163,7 +163,7 @@ int eval_mult(Itp* itp, Vec* stack) {
 
   if ((rtok.type != tt_Long && rtok.type != tt_Float) ||
       (ltok.type != tt_Long && ltok.type != tt_Float)) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot multiply %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot multiply %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -204,7 +204,7 @@ int eval_div(Itp* itp, Vec* stack) {
 
   if ((rtok.type != tt_Long && rtok.type != tt_Float) ||
       (ltok.type != tt_Long && ltok.type != tt_Float)) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot multiply %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot multiply %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -251,7 +251,7 @@ int eval_pow(Itp* itp, Vec* stack) {
 
   if ((rtok.type != tt_Long && rtok.type != tt_Float) ||
       (ltok.type != tt_Long && ltok.type != tt_Float)) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot multiply %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot multiply %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -294,7 +294,7 @@ int eval_or(Itp* itp, Vec* stack) {
 
   if ((rtok.type != tt_Long && rtok.type != tt_Float) ||
       (ltok.type != tt_Long && ltok.type != tt_Float)) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot OR %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot OR %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -328,7 +328,7 @@ int eval_and(Itp* itp, Vec* stack) {
 
   if ((rtok.type != tt_Long && rtok.type != tt_Float) ||
       (ltok.type != tt_Long && ltok.type != tt_Float)) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot AND %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot AND %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -359,7 +359,7 @@ int eval_not(Itp* itp, Vec* stack) {
   if (vec_pop(stack, &rtok)) return -1;
 
   if (rtok.type != tt_Long && rtok.type != tt_Float) {
-    if (str_fmt_cstr(&itp->errorString, "Cannot NOT %s", tok_get_type_cstr(rtok.type))) return -1;
+    if (str_fmt_cstr(&itp->error_string, "Cannot NOT %s", tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -395,7 +395,7 @@ int eval_eq(Itp* itp, Vec* stack) {
   } else {
     if ((rtok.type != tt_Long && rtok.type != tt_Float) ||
         (ltok.type != tt_Long && ltok.type != tt_Float)) {
-      if (str_fmt_cstr(&itp->errorString, "Cannot compare %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
+      if (str_fmt_cstr(&itp->error_string, "Cannot compare %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
       RES_RETURN(r_EINTERPRET, -1);
     }
 
@@ -440,7 +440,7 @@ int eval_neq(Itp* itp, Vec* stack) {
   } else {
     if ((rtok.type != tt_Long && rtok.type != tt_Float) ||
         (ltok.type != tt_Long && ltok.type != tt_Float)) {
-      if (str_fmt_cstr(&itp->errorString, "Cannot compare %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
+      if (str_fmt_cstr(&itp->error_string, "Cannot compare %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
       RES_RETURN(r_EINTERPRET, -1);
     }
 
@@ -485,7 +485,7 @@ int eval_lt(Itp* itp, Vec* stack) {
   } else {
     if ((rtok.type != tt_Long && rtok.type != tt_Float) ||
         (ltok.type != tt_Long && ltok.type != tt_Float)) {
-      if (str_fmt_cstr(&itp->errorString, "Cannot compare %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
+      if (str_fmt_cstr(&itp->error_string, "Cannot compare %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
       RES_RETURN(r_EINTERPRET, -1);
     }
 
@@ -530,7 +530,7 @@ int eval_gt(Itp* itp, Vec* stack) {
   } else {
     if ((rtok.type != tt_Long && rtok.type != tt_Float) ||
         (ltok.type != tt_Long && ltok.type != tt_Float)) {
-      if (str_fmt_cstr(&itp->errorString, "Cannot compare %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
+      if (str_fmt_cstr(&itp->error_string, "Cannot compare %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
       RES_RETURN(r_EINTERPRET, -1);
     }
 
@@ -576,7 +576,7 @@ int eval_le(Itp* itp, Vec* stack) {
   } else {
     if ((rtok.type != tt_Long && rtok.type != tt_Float) ||
         (ltok.type != tt_Long && ltok.type != tt_Float)) {
-      if (str_fmt_cstr(&itp->errorString, "Cannot compare %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
+      if (str_fmt_cstr(&itp->error_string, "Cannot compare %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
       RES_RETURN(r_EINTERPRET, -1);
     }
 
@@ -622,7 +622,7 @@ int eval_ge(Itp* itp, Vec* stack) {
   } else {
     if ((rtok.type != tt_Long && rtok.type != tt_Float) ||
         (ltok.type != tt_Long && ltok.type != tt_Float)) {
-      if (str_fmt_cstr(&itp->errorString, "Cannot compare %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
+      if (str_fmt_cstr(&itp->error_string, "Cannot compare %s and %s", tok_get_type_cstr(ltok.type), tok_get_type_cstr(rtok.type))) return -1;
       RES_RETURN(r_EINTERPRET, -1);
     }
 

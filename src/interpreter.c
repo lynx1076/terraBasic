@@ -12,6 +12,8 @@
 void _var_free(ItpVar* var);
 void _line_free(ItpLine* line);
 
+Str input_str;
+
 int itp_var_add(Itp* itp, Str* name, Token* token) {
   ASSERT(itp);
   ASSERT(name);
@@ -20,7 +22,7 @@ int itp_var_add(Itp* itp, Str* name, Token* token) {
     ItpVar* check_var = vec_get(&itp->variables, i);
     if (str_cmp(&check_var->name, name)) {
       if (str_cstr(name)) return -1;
-      if (str_fmt_cstr(&itp->errorString, "Variable \"%s\" already declared", name->text)) return -1;
+      if (str_fmt_cstr(&itp->error_string, "Variable \"%s\" already declared", name->text)) return -1;
       RES_RETURN(r_EINTERPRET, 0);
     }
   }
@@ -58,9 +60,11 @@ int itp_init(Itp* itp) {
 
   if (vec_init(&itp->lines, sizeof(ItpLine))) return -1;
   if (vec_init(&itp->variables, sizeof(ItpVar))) return -1;
+  if (vec_init(&itp->sub_stack, sizeof(size_t))) return -1;
 
   itp->line_index = 0;
-  if (str_init_cstr(&itp->errorString, "Unknown error")) return -1;
+  if (str_init_cstr(&itp->error_string, "Unknown error")) return -1;
+  if (str_init(&itp->input_string)) return -1;
 
   itp->current_line = NULL;
   itp->running = false;
@@ -85,16 +89,36 @@ void itp_free(Itp* itp) {
 
   vec_free(&itp->lines);
   vec_free(&itp->variables);
-  str_free(&itp->errorString);
+  vec_free(&itp->sub_stack);
+  str_free(&itp->error_string);
+  str_free(&itp->input_string);
 }
 
-ItpLine* ipt_get_line(Itp* itp, size_t line_num) {
+int itp_clear(Itp* itp) {
+  ASSERT(itp);
+
+  for (size_t i = 0; i < itp->variables.count; i++) {
+    ItpVar* var = vec_get(&itp->variables, i);
+
+    _var_free(var);
+  }
+
+  vec_clear(&itp->variables);
+  vec_clear(&itp->sub_stack);
+
+  RES_RETURN(r_ENONE, 0);
+}
+
+ItpLine* itp_get_line(Itp* itp, size_t line_num, size_t* index) {
   ASSERT(itp);
 
   for (size_t i = 0; i <= itp->lines.count; i++) {
     ItpLine* line = vec_get(&itp->lines, i);
-    if (line->line_num > line_num) RES_RETURN(r_ENONE, NULL);
-    else if (line->line_num == line_num) RES_RETURN(r_ENONE, line);
+    if (line && line->line_num > line_num) RES_RETURN(r_ENONE, NULL);
+    else if (line && line->line_num == line_num) {
+      if (index) *index = i;
+      RES_RETURN(r_ENONE, line);
+    }
   }
   RES_RETURN(r_ENONE, NULL);
 }
@@ -125,7 +149,7 @@ int itp_line_add(Itp* itp, const Str* text, size_t line_num) {
     }
   }
 
-  if (lxr_LexLine(&new_line_ptr->tokens, &itp->errorString, &new_line_ptr->text)) return -1;
+  if (lxr_LexLine(&new_line_ptr->tokens, &itp->error_string, &new_line_ptr->text)) return -1;
 
   RES_RETURN(r_ENONE, 0);
 }
@@ -135,7 +159,12 @@ int itp_shell(Itp* itp) {
 
   if (itp->running) {
     itp->current_line = vec_get(&itp->lines, itp->line_index);
-    if (itp_interpret_line(itp)) return -1;
+    if (itp_interpret_line(itp)) {
+      if (str_cstr(&itp->error_string)) return _res;
+      printf("Error on line %zu:\n%s\n", itp->current_line->line_num, itp->error_string.text);
+      itp->running = false;
+      return -1;
+    }
 
     if (!itp->jumped) itp->line_index++;
     else itp->jumped = false;
@@ -148,36 +177,27 @@ int itp_shell(Itp* itp) {
     RES_RETURN(r_ENONE, 0);
   }
 
-  Str input_str;
-  if (str_init(&input_str)) return _res;
-
   printf(">>>");
-  char* line = NULL;
-  size_t size = 0;
-  ssize_t len = 0;
-
-  len = getline(&line, &size, stdin) - 1;
-  if (len < 0) {
-    printf("Failed to get input\n");
-    return -1;
-  }
-  line[len] = '\0';
-  if (!len) RES_RETURN(r_ENONE, 0);
+  if (str_get_line(&itp->input_string)) return -1;
 
   ItpLine new_line;
 
-  if (str_init_cstr(&new_line.text, line)) return -1;
+  if (str_dup(&new_line.text, &itp->input_string)) return -1;
   if (vec_init(&new_line.tokens, sizeof(Token))) return -1;
-  if (lxr_LexLine(&new_line.tokens, &itp->errorString, &new_line.text)) return -1;
+  if (lxr_LexLine(&new_line.tokens, &itp->error_string, &new_line.text)) return -1;
 
   Token* line_tok = vec_get(&new_line.tokens, 0);
   if (line_tok && line_tok->type == tt_Long) {
     long line_num = line_tok->_long;
     if (line_num < 0) {
-      if (str_cpy_cstr(&itp->errorString, "Cannot have negative line number")) return -1;
+      if (str_cpy_cstr(&itp->error_string, "Cannot have negative line number")) return -1;
       RES_RETURN(r_EINTERPRET, 0);
     }
-
+  
+    if (new_line.tokens.count == 1) {
+      _line_free(&new_line);
+      RES_RETURN(r_ENONE, 0);
+    }
     if (vec_pop_at(&new_line.tokens, 0, NULL)) return -1;
 
     for (size_t i = 0; i <= itp->lines.count; i++) {
@@ -195,7 +215,11 @@ int itp_shell(Itp* itp) {
     }
   } else {
     itp->current_line = &new_line;
-    if (itp_interpret_line(itp)) return -1;
+    if (itp_interpret_line(itp)) {
+      if (str_cstr(&itp->error_string)) return _res;
+      printf("Error:\n%s\n", itp->error_string.text);
+      return -1;
+    }
     _line_free(&new_line);
   }
   RES_RETURN(r_ENONE, 0);
@@ -216,7 +240,7 @@ int itp_interpret_line(Itp* itp) {
       if (handle_variable(itp)) return -1;
     } break;
     default: {
-      if (str_fmt_cstr(&itp->errorString, "Invalid token here: %s", tok_get_type_cstr(token->type))) return -1;
+      if (str_fmt_cstr(&itp->error_string, "Invalid token here: %s", tok_get_type_cstr(token->type))) return -1;
       RES_RETURN(r_EINTERPRET, -1);
     }
   }
