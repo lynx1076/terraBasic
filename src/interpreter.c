@@ -6,7 +6,9 @@
 #include "str.h"
 #include "vector.h"
 #include "tokens.h"
+#include "terminal.h"
 #include <stddef.h>
+#include <stdio.h>
 #include <time.h>
 
 void _var_free(ItpVar* var);
@@ -178,7 +180,8 @@ int itp_shell(Itp* itp) {
   }
 
   printf(">>>");
-  if (str_get_line(&itp->input_string)) return -1;
+  fflush(stdout);
+  if (get_input(&itp->input_string)) return -1;
 
   ItpLine new_line;
 
@@ -229,6 +232,7 @@ int itp_interpret_line(Itp* itp) {
   ASSERT(itp);
 
   ItpLine* line = itp->current_line;
+  if (line->tokens.count == 0) RES_RETURN(r_ENONE, 0);
 
   Token* token = vec_get(&line->tokens, 0);
 

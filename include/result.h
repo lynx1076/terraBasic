@@ -32,6 +32,7 @@
   X(r_ECOMPATIBILITY) \
   X(r_ENOT_IMPLEMENTED) \
   X(r_EUNREACHABLE) \
+  X(r_INTERRUPTED) \
 
 
 typedef enum {

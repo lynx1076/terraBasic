@@ -1,11 +1,13 @@
 #include "interpreter_helpers.h"
 #include "eval.h"
+#include "terminal.h"
 #include "interpreter.h"
 #include "debug.h"
 #include "result.h"
 #include "str.h"
 #include "tokens.h"
 #include "vector.h"
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 
@@ -219,10 +221,26 @@ int keyword_input(Itp* itp, Vec* tokens) {
   ASSERT(tokens);
 
   Token* prompt_tok = vec_get(tokens, 1);
-  
-  size_t i = 2;
-  Token* next_tok = vec_get(tokens, i);
-  while (next_tok)
+  if (!prompt_tok) {
+    if (str_cpy_cstr(&itp->error_string, "Require prompt string")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  Token* var_tok = vec_get(tokens, 2);
+  if (!var_tok || var_tok->type != tt_Variable) {
+    if (str_cpy_cstr(&itp->error_string, "Require variable to fill")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  ItpVar* var = itp_get_var(itp, &var_tok->string);
+
+  tok_free(&var->token);
+  var->token.type = tt_String;
+  if (str_init(&var->token.string)) return -1;
+
+  if (get_input(&var->token.string)) return -1;
+
+  RES_RETURN(r_ENONE, 0);
 }
 
 int keyword_goto(Itp* itp, Vec* tokens) {

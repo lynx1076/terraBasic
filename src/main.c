@@ -1,10 +1,7 @@
-#include <signal.h>
 #include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "interpreter.h"
 #include "result.h"
-#include "str.h"
+#include "terminal.h"
 
 
 char* window_title = "terraTree";
@@ -16,11 +13,11 @@ int main(int argc, char** argv) {
 
   if (itp_init(&itp)) return _res;
 
-  signal(SIGINT, sigint_handler);
+  set_conio_mode();
 
   while (true) {
     if (itp_shell(&itp)) {
-      continue;
+      if (_res == r_INTERRUPTED) break;
     }
   }
 

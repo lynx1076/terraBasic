@@ -1,17 +1,20 @@
+#include "debug.h"
+#include "result.h"
+#include "str.h"
+#include <ctype.h>
+#include <signal.h>
 #include <stdatomic.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 #include <termios.h>
-#include <signal.h>
 #include <poll.h>
 #include <termios.h>
 #include <stdbool.h>
 
 struct termios orig_termios;
-volatile atomic_bool terminal_int = false;
+atomic_bool terminal_int = false;
 
 void _sigint_handler(int sig) {
   (void)sig;
@@ -19,12 +22,15 @@ void _sigint_handler(int sig) {
   terminal_int = true;
 }
 
-bool got_interrupt(void) {
-
-}
-
 void _reset_terminal_mode(void) {
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+}
+
+bool got_interrupt(void) {
+  bool cpy = terminal_int;
+  terminal_int = false;
+
+  return cpy;
 }
 
 void set_conio_mode(void) {
@@ -39,35 +45,40 @@ void set_conio_mode(void) {
   new_termios.c_cc[VTIME] = 0;
   
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &new_termios);
+
+  signal(SIGINT, _sigint_handler);
 }
 
-size_t get_input() {
+int get_input(Str* str) {
+  ASSERT(str);
+
+  if (str_clear(str)) return -1;
+
   while (!got_interrupt()) {
     char ch;
-        // read() will return immediately because of our termios settings
     int bytes_read = read(STDIN_FILENO, &ch, 1);
 
     if (bytes_read > 0) {
-    // Echo the character manually since ECHO is turned off
-    if (ch == '\n' || ch == '\r') {
-      printf("\n");
-      break; // User pressed Enter, we are done
-            } else if (ch == 127 || ch == 8) { // Handle Backspace
-                if (count > 0) {
-                    count--;
-                    buffer[count] = '\0';
-                    printf("\b \b"); // Move back, print space to clear, move back
-                    fflush(stdout);
-                }
-            } else if (count < (int)sizeof(buffer) - 1) {
-                buffer[count++] = ch;
-                putchar(ch);
-                fflush(stdout);
-            }
+      if (ch == '\n' || ch == '\r') {
+        printf("\n");
+        RES_RETURN(r_ENONE, 0);
+      } else if (ch == 127 || ch == 8) { // Backspace
+        if (str->length > 0) {
+          if (str_substr(str, 0, str->length - 1)) return -1;
+          printf("\b \b"); // Move back, print space, move back
+          fflush(stdout);
         }
-
-        // 4. Sleep briefly to prevent 100% CPU usage loop
-        usleep(10000); // 10ms pause
+      } else if (isprint(ch)) {
+        if (str_cncat(str, &ch, 1)) return -1;
+        putchar(ch);
+        fflush(stdout);
+      }
     }
+
+    usleep(10000);
+  }
+  printf("\n");
+
+  RES_RETURN(r_INTERRUPTED, -1);
 }
 
