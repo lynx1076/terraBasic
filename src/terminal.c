@@ -1,84 +1,49 @@
-#include "debug.h"
+#include "terminal.h"
+#include "font_data.h"
 #include "result.h"
-#include "str.h"
-#include <ctype.h>
-#include <signal.h>
-#include <stdatomic.h>
+#include <raylib.h>
 #include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <termios.h>
-#include <poll.h>
-#include <termios.h>
-#include <stdbool.h>
 
-struct termios orig_termios;
-atomic_bool terminal_int = false;
 
-void _sigint_handler(int sig) {
-  (void)sig;
+char text_buff[TERMINAL_HEIGHT][TERMINAL_WIDTH];
+int cursor_x, cursor_y = 0;
 
-  terminal_int = true;
-}
 
-void _reset_terminal_mode(void) {
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
-}
+int term_init(const char* window_title) {
+  SetTraceLogLevel(LOG_ERROR);
+  SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+  InitWindow(GLYPH_WIDTH * TERMINAL_WIDTH, GLYPH_HEIGHT * TERMINAL_HEIGHT, window_title);
+  SetExitKey(KEY_NULL);
 
-bool got_interrupt(void) {
-  bool cpy = terminal_int;
-  terminal_int = false;
-
-  return cpy;
-}
-
-void set_conio_mode(void) {
-  struct termios new_termios;
-  
-  tcgetattr(STDIN_FILENO, &orig_termios);
-  atexit(_reset_terminal_mode);
-  
-  new_termios = orig_termios;
-  new_termios.c_lflag &= ~(ICANON | ECHO);
-  new_termios.c_cc[VMIN] = 0;
-  new_termios.c_cc[VTIME] = 0;
-  
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &new_termios);
-
-  signal(SIGINT, _sigint_handler);
-}
-
-int get_input(Str* str) {
-  ASSERT(str);
-
-  if (str_clear(str)) return -1;
-
-  while (!got_interrupt()) {
-    char ch;
-    int bytes_read = read(STDIN_FILENO, &ch, 1);
-
-    if (bytes_read > 0) {
-      if (ch == '\n' || ch == '\r') {
-        printf("\n");
-        RES_RETURN(r_ENONE, 0);
-      } else if (ch == 127 || ch == 8) { // Backspace
-        if (str->length > 0) {
-          if (str_substr(str, 0, str->length - 1)) return -1;
-          printf("\b \b"); // Move back, print space, move back
-          fflush(stdout);
-        }
-      } else if (isprint(ch)) {
-        if (str_cncat(str, &ch, 1)) return -1;
-        putchar(ch);
-        fflush(stdout);
-      }
-    }
-
-    usleep(10000);
+  if (!IsWindowReady()) {
+    RES_RETURN(r_EUNKNOWN, -1);
   }
-  printf("\n");
 
-  RES_RETURN(r_INTERRUPTED, -1);
+  for (size_t y = 0; y < TERMINAL_HEIGHT; y++) {
+    for (size_t x = 0; x < TERMINAL_WIDTH; x++) {
+      text_buff[y][x] = ' ';
+    }
+  }
+
+  RES_RETURN(r_ENONE, 0);
+}
+
+int term_update(void) {
+  BeginDrawing();
+
+  for (size_t y = 0; y < TERMINAL_HEIGHT; y++) {
+    for (size_t x = 0; x < TERMINAL_WIDTH; x++) {
+      text_buff[y][x] = ' ';
+    }
+  }
+
+  EndDrawing();
+
+  RES_RETURN(r_ENONE, 0);
+}
+
+int term_draw_glyph(char c, unsigned int y, unsigned int x) {
+  for (size_t bmy = 0; bmy < GLYPH_HEIGHT; bmy++) {
+    for (size_t bmx = 0; bmx < GLYPH_WIDTH; bmx++) {
 }
 
