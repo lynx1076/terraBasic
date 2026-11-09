@@ -3,6 +3,7 @@
 
 #include "str.h"
 #include <stddef.h>
+#include <stdbool.h>
 
 #define SIGCHAR_STRING_BOUNDARY   '\"'
 #define SIGCHAR_DECIMAL_POINT     '.'
@@ -40,9 +41,8 @@
   X("RETURN", tk_Return, keyword_return) \
   X("END", tk_End, keyword_end) \
   X("IF", tk_If, keyword_if) \
-  X("ELSE", tk_Else, keyword_else) \
-  X("THEN", tk_Then, keyword_then) \
-  X(":", tk_Colon, keyword_colon) \
+  X("ELSE", tk_Else, keyword_none) \
+  X("THEN", tk_Then, keyword_none) \
 
 #define TOK_FUNCTIONS \
   X("SIN", tf_Sin, eval_sin) \
@@ -55,6 +55,8 @@
   X("LEFT", tf_Left, eval_left) \
   X("RIGHT", tf_Right, eval_right) \
   X("MID", tf_Mid, eval_mid) \
+  X("STR", tf_Str, eval_str) \
+  X("VAL", tf_Val, eval_val) \
 
 typedef enum {
   tt_Unknown,
@@ -124,5 +126,7 @@ TokenFunction tok_get_function(const char* cstr, size_t len);
 int tok_get_operator_precedence(TokenOperator op);
 
 int tok_print_value(Token* token);
+
+bool tok_is_true(Token* token);
 
 #endif

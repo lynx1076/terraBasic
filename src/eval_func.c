@@ -3,6 +3,7 @@
 #include "result.h"
 #include "str.h"
 #include "tokens.h"
+#include "utils.h"
 #include <math.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -437,6 +438,97 @@ int eval_mid(Itp* itp, Vec* stack, Token* token) {
 
   tok_free(&str_tok);
   tok_free(&start_tok);
+
+  if (vec_push(stack, &res)) return -1;
+ 
+  RES_RETURN(r_ENONE, 0);
+}
+
+int eval_str(Itp *itp, Vec *stack, Token *token) {
+  ASSERT(itp);
+  ASSERT(stack);
+
+  ASSERT(stack->count >= 1);
+
+  if (token->func.argCount != 1) {
+    if (str_fmt_cstr(&itp->error_string, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  Token res;
+
+  Token rtok;
+  if (vec_pop(stack, &rtok)) return -1;
+
+  if (rtok.type != tt_Long && rtok.type != tt_Float) {
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  bool r_is_float = rtok.type == tt_Float;
+  
+  if (r_is_float) {
+    res = (Token){
+      .type = tt_String,
+    };
+    if (str_init(&res.string)) return -1;
+    if (str_fmt_cstr(&res.string, "%f", rtok._float)) return -1;
+  } else {
+    res = (Token){
+      .type = tt_String,
+    };
+    if (str_fmt_cstr(&res.string, "%li", rtok._long)) return -1;
+  }
+
+  tok_free(&rtok);
+
+  if (vec_push(stack, &res)) return -1;
+ 
+  RES_RETURN(r_ENONE, 0);
+}
+
+int eval_val(Itp *itp, Vec *stack, Token *token) {
+  ASSERT(itp);
+  ASSERT(stack);
+
+  ASSERT(stack->count >= 1);
+
+  if (token->func.argCount != 1) {
+    if (str_fmt_cstr(&itp->error_string, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  Token res;
+
+  Token rtok;
+  if (vec_pop(stack, &rtok)) return -1;
+
+  if (rtok.type != tt_String) {
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  bool is_float = false;
+  for (size_t i = 0; i < rtok.string.length; i++) {
+    if (rtok.string.text[i] == '.') {
+      is_float = true;
+      break;
+    }
+  }
+  
+  if (is_float) {
+    res = (Token){
+      .type = tt_Float,
+    };
+    if (ParseFloat(&res._float, rtok.string.text, rtok.string.length)) return -1;
+  } else {
+    res = (Token){
+      .type = tt_Long,
+    };
+    if (ParseLong(&res._long, rtok.string.text, rtok.string.length)) return -1;
+  }
+
+  tok_free(&rtok);
 
   if (vec_push(stack, &res)) return -1;
  

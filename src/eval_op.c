@@ -53,36 +53,29 @@ int eval_plus(Itp* itp, Vec* stack) {
   bool r_is_str = rtok.type == tt_String;
   bool l_is_str = ltok.type == tt_String;
 
-  Str rstr = rtok.string;
-  Str lstr = ltok.string;
-
   if (r_is_str || l_is_str) {
-    if (!r_is_str) {
-      if (str_init(&rstr)) return -1;
+    if (str_init(&res.string)) return -1;
+    
+    if (r_is_str && l_is_str) {
+      if (str_cat(&res.string, &ltok.string)) return -1;
+      if (str_cat(&res.string, &rtok.string)) return -1;
+    } else if (!r_is_str) {
       if (rtok.type == tt_Long) {
-        if (str_fmt_cstr(&rstr, "%li", rtok._long)) return -1;
+        if (str_fmt_cstr(&res.string, "%li", rtok._long)) return -1;
       } else {
-        if (str_fmt_cstr(&rstr, "%f", rtok._float)) return -1;
+        if (str_fmt_cstr(&res.string, "%f", rtok._float)) return -1;
       }
-    }
-
-    if (!l_is_str) {
-      if (str_init(&lstr)) return -1;
+      if (str_insert(&res.string, &ltok.string, 0)) return -1;
+    } else if (!l_is_str) {
       if (ltok.type == tt_Long) {
-        if (str_fmt_cstr(&lstr, "%li", ltok._long)) return -1;
+        if (str_fmt_cstr(&res.string, "%li", ltok._long)) return -1;
       } else {
-        if (str_fmt_cstr(&lstr, "%f", ltok._float)) return -1;
+        if (str_fmt_cstr(&res.string, "%f", ltok._float)) return -1;
       }
+      if (str_cat(&res.string, &rtok.string)) return -1;
     }
 
-    if (str_cat(&lstr, &rstr)) return -1;
-
-    res = (Token){
-      .type = tt_String,
-    };
-    if (str_dup(&res.string, &lstr)) return -1;
-    if (!r_is_str) str_free(&rstr);
-    if (!l_is_str) str_free(&lstr);
+    res.type = tt_String;
   } else {
     bool r_is_float = rtok.type == tt_Float;
     bool l_is_float = ltok.type == tt_Float;

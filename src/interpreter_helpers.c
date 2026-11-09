@@ -99,8 +99,9 @@ int keyword_list(Itp* itp, Vec* tokens) {
       RES_RETURN(r_EINTERPRET, -1);
     }
     ItpLine* line = itp_get_line(itp, num_tok->_long, NULL);
-    if (!line) printf("Line is not defined\n");
+    if (!line) printf("Line is undefined\n");
     else {
+      if (str_cstr(&line->text)) return -1;
       printf("%s\n", line->text.text);
     }
     RES_RETURN(r_ENONE, 0);
@@ -109,7 +110,7 @@ int keyword_list(Itp* itp, Vec* tokens) {
     RES_RETURN(r_EINTERPRET, -1);
   }
 
-  printf("%zu line%s:\n", itp->lines.count, itp->lines.count == 1 ? "" : "s");
+  printf("%zu line%s:\n\n", itp->lines.count, itp->lines.count == 1 ? "" : "s");
   for (size_t i = 0; i < itp->lines.count; i++) {
     ItpLine* line = vec_get(&itp->lines, i);
     if (str_cstr(&line->text)) return -1;
@@ -190,9 +191,14 @@ int keyword_dim(Itp* itp, Vec* tokens) {
 
   Token* var_tok = vec_get(tokens, 1);
 
-  if (!var_tok || var_tok->type != tt_Variable) {
-    if (str_cstr(&var_tok->string)) return -1;
-    if (str_fmt_cstr(&itp->error_string, "\"%s\" is not a variable name", var_tok->string.text)) return -1;
+  if (!var_tok) {
+    if (str_cpy_cstr(&itp->error_string, "No variable name was provided")) return -1;
+
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  if (var_tok->type != tt_Variable) {
+    if (str_fmt_cstr(&itp->error_string, "Not a valid variable name", var_tok->string.text)) return -1;
 
     RES_RETURN(r_EINTERPRET, -1);
   }
@@ -208,7 +214,7 @@ int keyword_print(Itp* itp, Vec* tokens) {
 
   Token print_tok;
 
-  if (evl_eval(itp, 1, tokens->count, &print_tok)) return -1;
+  if (evl_eval(itp, 1, tokens->count + 1, &print_tok)) return -1;
   tok_print_value(&print_tok);
   printf("\n");
   tok_free(&print_tok);
@@ -233,11 +239,18 @@ int keyword_input(Itp* itp, Vec* tokens) {
   }
 
   ItpVar* var = itp_get_var(itp, &var_tok->string);
+  if (!var) {
+    if (str_cpy_cstr(&itp->error_string, "Variable is undeclared")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
 
   tok_free(&var->token);
   var->token.type = tt_String;
   if (str_init(&var->token.string)) return -1;
 
+  if (str_cstr(&prompt_tok->string)) return -1;
+  printf("%s", prompt_tok->string.text);
+  fflush(stdout);
   if (get_input(&var->token.string)) return -1;
 
   RES_RETURN(r_ENONE, 0);
@@ -253,13 +266,8 @@ int keyword_goto(Itp* itp, Vec* tokens) {
     RES_RETURN(r_EINTERPRET, -1);
   }
 
-  ItpLine* line = itp_get_line(itp, line_tok->_long, &itp->line_index);
-  if (!line) {
-    if (str_cpy_cstr(&itp->error_string, "Invalid line number")) return -1;
-    RES_RETURN(r_EINTERPRET, -1);
-  }
+  if (itp_goto(itp, (size_t)line_tok->_long)) return -1;
 
-  itp->jumped = true;
   RES_RETURN(r_ENONE, 0);
 }
 
@@ -273,15 +281,8 @@ int keyword_gosub(Itp* itp, Vec* tokens) {
     RES_RETURN(r_EINTERPRET, -1);
   }
 
-  if (vec_push(&itp->sub_stack, &itp->line_index)) return -1;
+  if (itp_gosub(itp, (size_t)line_tok->_long)) return -1;
 
-  ItpLine* line = itp_get_line(itp, line_tok->_long, &itp->line_index);
-  if (!line) {
-    if (str_cpy_cstr(&itp->error_string, "Invalid line number")) return -1;
-    RES_RETURN(r_EINTERPRET, -1);
-  }
-
-  itp->jumped = true;
   RES_RETURN(r_ENONE, 0);
 }
 
@@ -289,14 +290,8 @@ int keyword_return(Itp* itp, Vec* tokens) {
   ASSERT(itp);
   ASSERT(tokens);
 
-  if (itp->sub_stack.count == 0) {
-    if (str_cpy_cstr(&itp->error_string, "Cannot return, not in subroutine")) return -1;
-    RES_RETURN(r_EINTERPRET, -1);
-  }
+  if (itp_return(itp)) return -1;
 
-  if (vec_pop(&itp->sub_stack, &itp->line_index)) return -1;
-
-  itp->jumped = true;
   RES_RETURN(r_ENONE, 0);
 }
 
@@ -311,15 +306,84 @@ int keyword_end(Itp* itp, Vec* tokens) {
   RES_RETURN(r_ENONE, 0);
 }
 
+int _handle_conditional_jump(Itp* itp, Vec* tokens, size_t tok_index) {
+  Token* jmp_tok = vec_get(tokens, tok_index);
+  if (!jmp_tok) {
+    if (str_cpy_cstr(&itp->error_string, "If requires jump instructions after THEN")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  if (jmp_tok->type == tt_Long) {
+    if (itp_goto(itp, jmp_tok->_long)) return -1;
+    RES_RETURN(r_ENONE, 0);
+  } else if (jmp_tok->type != tt_Keyword) {
+    if (str_cpy_cstr(&itp->error_string, "If requires jump instructions after THEN")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  switch (jmp_tok->keyword) {
+    case tk_Goto: {
+      Token* line_tok = vec_get(tokens, tok_index + 1);
+      if (line_tok->type != tt_Long) {
+        if (str_cpy_cstr(&itp->error_string, "If line number after GOTO")) return -1;
+        RES_RETURN(r_EINTERPRET, -1);
+      }
+      if (itp_goto(itp, jmp_tok->_long)) return -1;
+    } break;
+    case tk_Gosub: {
+      Token* line_tok = vec_get(tokens, tok_index + 1);
+      if (line_tok->type != tt_Long) {
+        if (str_cpy_cstr(&itp->error_string, "If line number after GOTO")) return -1;
+        RES_RETURN(r_EINTERPRET, -1);
+      }
+      if (itp_gosub(itp, jmp_tok->_long)) return -1;
+    } break;
+    case tk_Return: {
+      if (itp_return(itp)) return -1;
+    } break;
+    default: {
+      if (str_cpy_cstr(&itp->error_string, "If requires jump instructions after THEN")) return -1;
+    } RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  RES_RETURN(r_ENONE, 0);
+}
+
 int keyword_if(Itp* itp, Vec* tokens) {
-}
+  ASSERT(itp);
+  ASSERT(tokens);
 
-int keyword_else(Itp* itp, Vec* tokens) {
-}
+  size_t then_index = 1;
+  Token* then_tok;
+  do {
+    then_tok = vec_get(tokens, then_index);
+    if (!then_tok) {
+      if (str_cpy_cstr(&itp->error_string, "Line thened without THEN keyword")) return -1;
+      RES_RETURN(r_EINTERPRET, -1);
+    }
+    then_index++;
+  } while (then_tok->type == tt_Keyword && then_tok->keyword == tk_Then);
 
-int keyword_then(Itp* itp, Vec* tokens) {
-}
+  Token res;
+  if (evl_eval(itp, 1, then_index, &res)) return -1;
 
-int keyword_colon(Itp* itp, Vec* tokens) {
+  if (tok_is_true(&res)) {
+    if (_handle_conditional_jump(itp, tokens, then_index + 1)) return -1;
+    RES_RETURN(r_ENONE, 0);
+  }
+
+  size_t else_index = then_index + 1;
+  Token* else_tok;
+  do {
+    else_tok = vec_get(tokens, else_index);
+    if (!else_tok) {
+      RES_RETURN(r_ENONE, 0);
+    }
+    else_index++;
+  } while (else_tok->type == tt_Keyword && else_tok->keyword == tk_Else);
+
+  if (_handle_conditional_jump(itp, tokens, else_index + 1)) return -1;
+
+  RES_RETURN(r_ENONE, 0);
 }
 

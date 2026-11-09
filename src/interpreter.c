@@ -159,6 +159,11 @@ int itp_line_add(Itp* itp, const Str* text, size_t line_num) {
 int itp_shell(Itp* itp) {
   ASSERT(itp);
 
+  if (got_interrupt()) {
+    if (itp->running) itp->running = false;
+    else RES_RETURN(r_INTERRUPTED, 0);
+  }
+
   if (itp->running) {
     itp->current_line = vec_get(&itp->lines, itp->line_index);
     if (itp_interpret_line(itp)) {
@@ -169,7 +174,7 @@ int itp_shell(Itp* itp) {
     }
 
     if (!itp->jumped) itp->line_index++;
-    else itp->jumped = false;
+    itp->jumped = false;
 
     if (itp->line_index >= itp->lines.count) {
       itp->running = false;
@@ -183,11 +188,17 @@ int itp_shell(Itp* itp) {
   fflush(stdout);
   if (get_input(&itp->input_string)) return -1;
 
-  ItpLine new_line;
+  ItpLine new_line = {
+    .line_num = 0
+  };
 
   if (str_dup(&new_line.text, &itp->input_string)) return -1;
   if (vec_init(&new_line.tokens, sizeof(Token))) return -1;
-  if (lxr_LexLine(&new_line.tokens, &itp->error_string, &new_line.text)) return -1;
+  if (lxr_LexLine(&new_line.tokens, &itp->error_string, &new_line.text)) {
+    if (str_cstr(&itp->error_string)) return -1;
+    printf("Lexical analysis failed::\n%s\n", itp->error_string.text);
+    RES_RETURN(r_EINTERPRET, -1);
+  }
 
   Token* line_tok = vec_get(&new_line.tokens, 0);
   if (line_tok && line_tok->type == tt_Long) {
@@ -220,8 +231,9 @@ int itp_shell(Itp* itp) {
     itp->current_line = &new_line;
     if (itp_interpret_line(itp)) {
       if (str_cstr(&itp->error_string)) return _res;
-      printf("Error:\n%s\n", itp->error_string.text);
-      return -1;
+      printf("Error during interpreting:\n%s\n", itp->error_string.text);
+      _line_free(&new_line);
+      RES_RETURN(r_EINTERPRET, -1);
     }
     _line_free(&new_line);
   }
@@ -252,26 +264,74 @@ int itp_interpret_line(Itp* itp) {
   RES_RETURN(r_ENONE, 0);
 }
 
-int itp_print_line(Itp* itp, size_t line_num) {
+int itp_goto(Itp* itp, size_t line_num) {
   ASSERT(itp);
 
-  for (size_t i = 0; i < itp->lines.count; i++) {
-    ItpLine* line = vec_get(&itp->lines, i);
-    if (line->line_num != line_num) continue;
-
-    if (str_cstr(&line->text)) return -1;
-
-    printf("Line %zu\n", line_num);
-    for (size_t i = 0; i < line->tokens.count; i++) {
-      Token* token = vec_get(&line->tokens, i);
-      printf("(%zu): ", i);
-      tok_print(token);
-      printf("\n");
-    }
-
-    RES_RETURN(r_ENONE, 0);
+  ItpLine* line = itp_get_line(itp, line_num, &itp->line_index);
+  if (!line) {
+    if (str_cpy_cstr(&itp->error_string, "Invalid line number")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
   }
-  printf("%zu: -- EMPTY --\n", line_num);
+
+  itp->jumped = itp->running;
+  itp->running = true;
+
+  RES_RETURN(r_ENONE, 0);
+}
+
+int itp_gosub(Itp* itp, size_t line_num) {
+  ASSERT(itp);
+
+  if (!itp->running) {
+    if (str_cpy_cstr(&itp->error_string, "Cannot GOSUB when program is not being run")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+  
+  if (vec_push(&itp->sub_stack, &itp->line_index)) return -1;
+
+  ItpLine* line = itp_get_line(itp, line_num, &itp->line_index);
+  if (!line) {
+    if (str_cpy_cstr(&itp->error_string, "Invalid line number")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  itp->jumped = true;
+
+  RES_RETURN(r_ENONE, 0);
+}
+
+int itp_return(Itp* itp) {
+  ASSERT(itp);
+
+  if (!itp->running) {
+    if (str_cpy_cstr(&itp->error_string, "Cannot RETURN when program is not being run")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  if (itp->sub_stack.count == 0) {
+    if (str_cpy_cstr(&itp->error_string, "Cannot RETURN when not in subroutine")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  if (vec_pop(&itp->sub_stack, &itp->line_index)) return -1;
+
+  RES_RETURN(r_ENONE, 0);
+}
+
+int itp_print_line(Itp* itp, ItpLine* line) {
+  ASSERT(itp);
+  ASSERT(line);
+
+  if (str_cstr(&line->text)) return -1;
+
+  printf("Line %zu\n", line->line_num);
+  for (size_t i = 0; i < line->tokens.count; i++) {
+    Token* token = vec_get(&line->tokens, i);
+    printf("(%zu): ", i);
+    tok_print(token);
+    printf("\n");
+  }
+
   RES_RETURN(r_ENONE, 0);
 }
 

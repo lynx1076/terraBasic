@@ -149,6 +149,8 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
       if (str_init_cnstr(&token.string, lstate.line->text + tokenStart, lstate.index - tokenStart + 1)) return -1;
     }
 
+    if (token.type == tt_Keyword && token.keyword == tk_Rem) break;
+
     if (vec_push(tokens, &token)) return -1;
 
     _move_cursor(&lstate, 1);

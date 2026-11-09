@@ -210,3 +210,18 @@ int tok_print_value(Token* token) {
   RES_RETURN(r_ENONE, 0);
 }
 
+bool tok_is_true(Token* token) {
+  ASSERT(token);
+
+  switch (token->type) {
+    case tt_Float:
+      return token->_float != 0;
+    case tt_Long:
+      return token->_long != 0;
+    case tt_String:
+      return token->string.length != 0;
+    default:
+      return false;
+  }
+}
+

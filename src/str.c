@@ -135,7 +135,7 @@ int str_cat(Str* str, const Str* str2) {
 
 int str_insert(Str* str, const Str* str2, size_t insertIndex) {
   ASSERT(str && str2);
-  ASSERT(insertIndex > str->length);
+  ASSERT(insertIndex <= str->length);
 
   if (_str_reserve(str, str2->length)) return -1;
 
