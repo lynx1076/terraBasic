@@ -210,6 +210,12 @@ int itp_shell(Itp* itp) {
   
     if (new_line.tokens.count == 1) {
       _line_free(&new_line);
+      size_t line_index;
+      ItpLine* del_line = itp_get_line(itp, line_num, &line_index);
+      if (del_line) {
+        _line_free(del_line);
+        if (vec_pop_at(&itp->lines, line_index, NULL)) return -1;
+      }
       RES_RETURN(r_ENONE, 0);
     }
     if (vec_pop_at(&new_line.tokens, 0, NULL)) return -1;
