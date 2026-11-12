@@ -4,9 +4,9 @@
 #include "lexer.h"
 #include "result.h"
 #include "str.h"
+#include "terminal.h"
 #include "vector.h"
 #include "tokens.h"
-#include "terminal.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <time.h>
@@ -159,7 +159,7 @@ int itp_line_add(Itp* itp, const Str* text, size_t line_num) {
 int itp_shell(Itp* itp) {
   ASSERT(itp);
 
-  if (got_interrupt()) {
+  if (term_get_interrupt(itp->term)) {
     if (itp->running) itp->running = false;
     else RES_RETURN(r_INTERRUPTED, 0);
   }
@@ -186,7 +186,7 @@ int itp_shell(Itp* itp) {
 
   printf(">>>");
   fflush(stdout);
-  if (get_input(&itp->input_string)) return -1;
+  //if (get_input(&itp->input_string)) return -1;
 
   ItpLine new_line = {
     .line_num = 0

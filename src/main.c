@@ -1,3 +1,4 @@
+#include <raylib.h>
 #include <stddef.h>
 #include "interpreter.h"
 #include "result.h"
@@ -6,6 +7,7 @@
 
 char* window_title = "terraTree";
 Itp itp;
+Terminal term;
 
 int main(int argc, char** argv) {
   (void)argc;
@@ -13,12 +15,12 @@ int main(int argc, char** argv) {
 
   if (itp_init(&itp)) return _res;
 
-  set_conio_mode();
+  if (term_init(&term, "terraBasic")) return _res;
+  term.background_color = DARKBLUE;
+  term.text_color = WHITE;
 
   while (true) {
-    if (itp_shell(&itp)) {
-      if (_res == r_INTERRUPTED) break;
-    }
+    if (term_update(&term)) return _res;
   }
 
   itp_free(&itp);

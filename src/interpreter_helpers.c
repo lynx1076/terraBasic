@@ -251,7 +251,7 @@ int keyword_input(Itp* itp, Vec* tokens) {
   if (str_cstr(&prompt_tok->string)) return -1;
   printf("%s", prompt_tok->string.text);
   fflush(stdout);
-  if (get_input(&var->token.string)) return -1;
+  //if (get_input(&var->token.string)) return -1;
 
   RES_RETURN(r_ENONE, 0);
 }

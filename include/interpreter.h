@@ -2,6 +2,7 @@
 #define INTERPRETER_H
 
 #include <stddef.h>
+#include "terminal.h"
 #include "tokens.h"
 #include "vector.h"
 #include "str.h"
@@ -14,6 +15,7 @@ typedef struct {
 
 typedef struct {
   size_t line_index;
+  Terminal* term;
   ItpLine* current_line;
   bool jumped;
   Vec lines;
