@@ -3,7 +3,6 @@
 #include "result.h"
 #include "terminal.h"
 
-
 char* window_title = "terraTree";
 Itp itp;
 

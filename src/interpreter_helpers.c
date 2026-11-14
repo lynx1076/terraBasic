@@ -309,9 +309,13 @@ int keyword_end(Itp* itp, Vec* tokens) {
 int _handle_conditional_jump(Itp* itp, Vec* tokens, size_t tok_index) {
   Token* jmp_tok = vec_get(tokens, tok_index);
   if (!jmp_tok) {
-    if (str_cpy_cstr(&itp->error_string, "If requires jump instructions after THEN")) return -1;
+    if (str_cpy_cstr(&itp->error_string, "If requires jump instructions after THEN and ELSE")) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
+
+  printf("Token:\n");
+  tok_print(jmp_tok);
+  printf("\n");
 
   if (jmp_tok->type == tt_Long) {
     if (itp_goto(itp, jmp_tok->_long)) return -1;
@@ -358,17 +362,17 @@ int keyword_if(Itp* itp, Vec* tokens) {
   do {
     then_tok = vec_get(tokens, then_index);
     if (!then_tok) {
-      if (str_cpy_cstr(&itp->error_string, "Line thened without THEN keyword")) return -1;
+      if (str_cpy_cstr(&itp->error_string, "Line ended without THEN keyword")) return -1;
       RES_RETURN(r_EINTERPRET, -1);
     }
     then_index++;
-  } while (then_tok->type == tt_Keyword && then_tok->keyword == tk_Then);
+  } while (then_tok->type != tt_Keyword && then_tok->keyword != tk_Then);
 
   Token res;
-  if (evl_eval(itp, 1, then_index, &res)) return -1;
+  if (evl_eval(itp, 1, then_index - 1, &res)) return -1;
 
   if (tok_is_true(&res)) {
-    if (_handle_conditional_jump(itp, tokens, then_index + 1)) return -1;
+    if (_handle_conditional_jump(itp, tokens, then_index)) return -1;
     RES_RETURN(r_ENONE, 0);
   }
 
@@ -380,9 +384,9 @@ int keyword_if(Itp* itp, Vec* tokens) {
       RES_RETURN(r_ENONE, 0);
     }
     else_index++;
-  } while (else_tok->type == tt_Keyword && else_tok->keyword == tk_Else);
+  } while (else_tok->type != tt_Keyword && else_tok->keyword != tk_Else);
 
-  if (_handle_conditional_jump(itp, tokens, else_index + 1)) return -1;
+  if (_handle_conditional_jump(itp, tokens, else_index)) return -1;
 
   RES_RETURN(r_ENONE, 0);
 }
