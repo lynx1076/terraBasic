@@ -83,7 +83,7 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
       if (token.keyword != tk_None) {
         token.type = tt_Keyword;
       } else {
-        token.func.func = tok_get_function(lstate.line->text + tokenStart, lstate.index - tokenStart);
+        token.func.func = tok_get_function(lstate.line->text + tokenStart, len);
         if (token.func.func != tf_None) {
           token.type = tt_Function;
           token.func.argCount = 0;
@@ -137,7 +137,7 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
     }
 
     if (token.type == tt_Unknown) {
-      if (str_fmt_cstr(error_string, "Encountered an unknown token at %i: \"%.*s\"", lstate.index, lstate.index - tokenStart, lstate.line->text + tokenStart)) return -1;
+      if (str_fmt_cstr(error_string, "Encountered an unknown token at %i: \"%c\"", lstate.index, lstate.line->text[tokenStart])) return -1;
       RES_RETURN(r_ELEX, -1);
     }
 

@@ -161,16 +161,20 @@ int itp_shell(Itp* itp) {
 
   if (term_get_interrupt(itp->term)) {
     if (itp->running) itp->running = false;
-    else RES_RETURN(r_INTERRUPTED, 0);
+    else RES_RETURN(r_INTERRUPTED, 1);
   }
 
   if (itp->running) {
     itp->current_line = vec_get(&itp->lines, itp->line_index);
     if (itp_interpret_line(itp)) {
-      if (str_cstr(&itp->error_string)) return _res;
-      printf("Error on line %zu:\n%s\n", itp->current_line->line_num, itp->error_string.text);
+      result res = _res;
+
+      if (str_cstr(&itp->error_string)) return -1;
+      if (term_printf(itp->term, "Error on line %zu:\n%s\n", itp->current_line->line_num, itp->error_string.text)) return -1;
       itp->running = false;
-      return -1;
+
+      if (res != r_EINTERPRET) RES_RETURN(res, -1);
+      RES_RETURN(r_ENONE, 0);
     }
 
     if (!itp->jumped) itp->line_index++;
@@ -178,15 +182,18 @@ int itp_shell(Itp* itp) {
 
     if (itp->line_index >= itp->lines.count) {
       itp->running = false;
-      printf("Done\n");
+      if (term_printf(itp->term, "Done\n")) return -1;
     }
 
     RES_RETURN(r_ENONE, 0);
   }
 
-  printf(">>>");
-  fflush(stdout);
-  //if (get_input(&itp->input_string)) return -1;
+  if (!itp->term->input_await) if (term_printf(itp->term, ">>>")) return -1;
+  if (term_get_input(itp->term, &itp->input_string)) {
+    if (_res != r_DATA_READY) return -1;
+  } else {
+    RES_RETURN(r_ENONE, 0);
+  }
 
   ItpLine new_line = {
     .line_num = 0
@@ -195,9 +202,13 @@ int itp_shell(Itp* itp) {
   if (str_dup(&new_line.text, &itp->input_string)) return -1;
   if (vec_init(&new_line.tokens, sizeof(Token))) return -1;
   if (lxr_LexLine(&new_line.tokens, &itp->error_string, &new_line.text)) {
+    result res = _res;
+
     if (str_cstr(&itp->error_string)) return -1;
-    printf("Lexical analysis failed::\n%s\n", itp->error_string.text);
-    RES_RETURN(r_EINTERPRET, -1);
+    if (term_printf(itp->term, "Lexical analysis failed:\n%s\n", itp->error_string.text)) return -1;
+
+    if (res != r_ELEX) RES_RETURN(res, -1);
+    RES_RETURN(r_ENONE, 0);
   }
 
   Token* line_tok = vec_get(&new_line.tokens, 0);
@@ -205,7 +216,7 @@ int itp_shell(Itp* itp) {
     long line_num = line_tok->_long;
     if (line_num < 0) {
       if (str_cpy_cstr(&itp->error_string, "Cannot have negative line number")) return -1;
-      RES_RETURN(r_EINTERPRET, 0);
+      RES_RETURN(r_ENONE, 0);
     }
   
     if (new_line.tokens.count == 1) {
@@ -236,10 +247,14 @@ int itp_shell(Itp* itp) {
   } else {
     itp->current_line = &new_line;
     if (itp_interpret_line(itp)) {
-      if (str_cstr(&itp->error_string)) return _res;
-      printf("Error during interpreting:\n%s\n", itp->error_string.text);
+      result res = _res;
+      if (str_cstr(&itp->error_string)) return -1;
+      if (term_printf(itp->term, "Error during interpreting:\n%s\n", itp->error_string.text)) return -1;
       _line_free(&new_line);
-      RES_RETURN(r_EINTERPRET, -1);
+
+      if (res != r_EINTERPRET) RES_RETURN(res, -1);
+
+      RES_RETURN(r_ENONE, 0);
     }
     _line_free(&new_line);
   }
@@ -330,12 +345,12 @@ int itp_print_line(Itp* itp, ItpLine* line) {
 
   if (str_cstr(&line->text)) return -1;
 
-  printf("Line %zu\n", line->line_num);
+  if (term_printf(itp->term, "Line %zu\n", line->line_num)) return -1;
   for (size_t i = 0; i < line->tokens.count; i++) {
     Token* token = vec_get(&line->tokens, i);
-    printf("(%zu): ", i);
+    if (term_printf(itp->term, "(%zu): ", i)) return -1;
     tok_print(token);
-    printf("\n");
+    if (term_printf(itp->term, "\n")) return -1;
   }
 
   RES_RETURN(r_ENONE, 0);

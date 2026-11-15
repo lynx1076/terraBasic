@@ -2,6 +2,7 @@
 #include "debug.h"
 #include "font_data.h"
 #include "result.h"
+#include "str.h"
 #include <stdarg.h>
 #include <raylib.h>
 #include <stdarg.h>
@@ -9,6 +10,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 
 int term_init(Terminal* term, const char* window_title) {
@@ -20,35 +22,75 @@ int term_init(Terminal* term, const char* window_title) {
   if (!IsWindowReady()) {
     RES_RETURN(r_EUNKNOWN, -1);
   }
-
+  
   for (int y = 0; y < TERMINAL_HEIGHT; y++) {
     for (int x = 0; x < TERMINAL_WIDTH; x++) {
       if (term_set_pixel(term, x, y, 0)) return -1;
     }
   }
 
+  Image img = {
+    .data = term->frame_buff,
+    .width = TERMINAL_WIDTH,
+    .height = TERMINAL_HEIGHT,
+    .mipmaps = 1,
+    .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
+  };
+
+  term->tex = LoadTextureFromImage(img);
+  SetTextureFilter(term->tex, TEXTURE_FILTER_POINT);
+
+  if (str_init(&term->input_string)) return -1;
+
   term->cx = 0;
   term->cy = 0;
 
+  term->input_await = false;
+  term->input_ready = false;
+  term->interrupt = false;
+
   RES_RETURN(r_ENONE, 0);
+}
+
+void term_free(Terminal* term) {
+  ASSERT(term);
+
+  str_free(&term->input_string);
+  UnloadTexture(term->tex);
 }
 
 int term_update(Terminal* term) {
   BeginDrawing();
   ClearBackground(WHITE);
 
-  if (WindowShouldClose()) RES_RETURN(r_INTERRUPTED, -1);
+  if (WindowShouldClose()) term->interrupt = true;
 
-  for (char key = GetCharPressed(); key > 0; key = GetCharPressed()) {
-    if (term_print_glyph(term, key)) return -1;
+  UpdateTexture(term->tex, term->frame_buff);
+  DrawTextureEx(term->tex, (Vector2){0, 0}, 0, TERMINAL_SCALE, WHITE);
+
+  bool ctrl = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
+
+  if (ctrl) {
+    if (IsKeyPressed(KEY_C)) {
+      term->interrupt = true;
+      term->input_await = false;
+      term->input_ready = false;
+      term_printf(term, "\nCTRL+C\n");
+    }
   }
 
-  for (int y = 0; y < TERMINAL_HEIGHT; y++) {
-    for (int x = 0; x < TERMINAL_WIDTH; x++) {
-      for (int sy = 0; sy < TERMINAL_SCALE; sy++) {
-        for (int sx = 0; sx < TERMINAL_SCALE; sx++) {
-          DrawPixel(x * TERMINAL_SCALE + sx, y * TERMINAL_SCALE + sy, term->frame_buff[y][x] ? term->text_color : term->background_color);
-        }
+  if (!ctrl && term->input_await) {
+    if (IsKeyPressed(KEY_ENTER)) {
+      term->input_ready = true;
+      term_printf(term, "\n");
+    }
+
+    if (!term->input_ready) {
+      char c = GetCharPressed();
+      while (c != '\0') {
+        if (str_cncat(&term->input_string, &c, 1)) return -1;
+        term_printf(term, "%c", c);
+        c = GetCharPressed();
       }
     }
   }
@@ -58,12 +100,34 @@ int term_update(Terminal* term) {
   RES_RETURN(r_ENONE, 0);
 }
 
+int term_get_input(Terminal* term, Str* str) {
+  ASSERT(term);
+  ASSERT(str);
+
+  if (term->input_ready) {
+    if (str_cpy(str, &term->input_string)) return -1;
+    term->input_ready = false;
+    term->input_await = false;
+
+    RES_RETURN(r_DATA_READY, 1);
+  }
+
+  if (!term->input_await) {
+    if (str_clear(&term->input_string)) return -1;
+  }
+
+  term->input_await = true;
+  term->input_ready = false;
+
+  RES_RETURN(r_ENONE, 0);
+}
+
 int term_set_pixel(Terminal* term, unsigned int x, unsigned int y, bool pixel_on) {
   ASSERT(term);
 
   if (x >= TERMINAL_WIDTH || y >= TERMINAL_HEIGHT) RES_RETURN(r_EBOUNDS, -1);
 
-  term->frame_buff[y][x] = pixel_on ? -1 : 0;
+  term->frame_buff[y][x] = pixel_on ? term->text_color : term->background_color;
 
   RES_RETURN(r_ENONE, 0);
 }
@@ -99,10 +163,18 @@ int term_print_glyph(Terminal* term, char c) {
   term->cy += term->cx / TERMINAL_WIDTH_C;
   term->cx = term->cx % TERMINAL_WIDTH_C;
 
+  if (term->cy >= TERMINAL_HEIGHT_C) {
+    if (term_scroll(term, term->cy - TERMINAL_HEIGHT_C + 1)) return -1;
+    term->cy = TERMINAL_HEIGHT_C - 1;
+  }
+
   RES_RETURN(r_ENONE, 0);
 }
 
 int term_printf(Terminal* term, const char* fmt, ...) {
+  ASSERT(term);
+  ASSERT(fmt);
+
   va_list va;
   va_start(va, fmt);
   char* buff;
@@ -115,6 +187,26 @@ int term_printf(Terminal* term, const char* fmt, ...) {
     if (term_print_glyph(term, buff[i])) return -1;
   }
   free(buff);
+
+  RES_RETURN(r_ENONE, 0);
+}
+
+int term_scroll(Terminal* term, unsigned int lines) {
+  ASSERT(term);
+
+  size_t line_mem_offset = TERMINAL_WIDTH * GLYPH_HEIGHT * lines;
+
+  size_t count = (TERMINAL_HEIGHT * TERMINAL_WIDTH - line_mem_offset) * sizeof(Color);
+  size_t offset_src = line_mem_offset * sizeof(Color);
+  size_t offset_dst = 0;
+
+  memmove((char*)term->frame_buff + offset_dst, (char*)term->frame_buff + offset_src, count);
+
+  for (size_t y = 0; y < GLYPH_HEIGHT; y++) {
+    for (size_t x = 0; x < TERMINAL_WIDTH; x++) {
+      if (term_set_pixel(term, x, TERMINAL_HEIGHT - y - 1, 0)) return -1;
+    }
+  }
 
   RES_RETURN(r_ENONE, 0);
 }
