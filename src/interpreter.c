@@ -7,6 +7,7 @@
 #include "terminal.h"
 #include "vector.h"
 #include "tokens.h"
+#include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <time.h>
@@ -107,6 +108,27 @@ int itp_clear(Itp* itp) {
 
   vec_clear(&itp->variables);
   vec_clear(&itp->sub_stack);
+
+  RES_RETURN(r_ENONE, 0);
+}
+
+int itp_load_constants(Itp* itp) {
+  ASSERT(itp);
+
+  Str str_const_name;
+  if (str_init(&str_const_name)) return _res;
+
+  if (str_cpy_cstr(&str_const_name, "_e")) return _res;
+  if (itp_var_add(itp, &str_const_name, &(Token){.type = tt_Float, ._float = M_E})) return -1;
+
+  if (str_cpy_cstr(&str_const_name, "_pi")) return _res;
+  if (itp_var_add(itp, &str_const_name, &(Token){.type = tt_Float, ._float = M_PI})) return -1;
+
+  if (str_cpy_cstr(&str_const_name, "_width")) return _res;
+  if (itp_var_add(itp, &str_const_name, &(Token){.type = tt_Long, ._long = TERMINAL_WIDTH})) return -1;
+
+  if (str_cpy_cstr(&str_const_name, "_height")) return _res;
+  if (itp_var_add(itp, &str_const_name, &(Token){.type = tt_Long, ._long = TERMINAL_HEIGHT})) return -1;
 
   RES_RETURN(r_ENONE, 0);
 }

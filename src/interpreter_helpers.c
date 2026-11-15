@@ -258,6 +258,45 @@ int keyword_input(Itp* itp, Vec* tokens) {
   RES_RETURN(r_ERETRY, 1);
 }
 
+int keyword_setp(Itp* itp, Vec* tokens) {
+  ASSERT(itp);
+  ASSERT(tokens);
+
+  Token* tokx = vec_get(tokens, 1);
+  if (tokx->type == tt_Variable) {
+    ItpVar* var = itp_get_var(itp, &tokx->string);
+    if (!var) tokx->type = tt_None;
+    else tokx = &var->token;
+  }
+  if (!tokx || tokx->type != tt_Long) {
+    if (str_cpy_cstr(&itp->error_string, "Need long for pixel x")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  Token* toky = vec_get(tokens, 1);
+  if (toky->type == tt_Variable) {
+    ItpVar* var = itp_get_var(itp, &toky->string);
+    if (!var) tokx->type = tt_None;
+    else toky = &var->token;
+  }
+  if (!toky || toky->type != tt_Long) {
+    if (str_cpy_cstr(&itp->error_string, "Need long for pixel y")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  Token token_on;
+  if (evl_eval(itp, 3, tokens->count, &token_on)) return -1;
+  if (term_set_pixel(itp->term, tokx->_long, toky->_long, tok_is_true(&token_on))) {
+    if (_res == r_EBOUNDS) {
+      if (term_printf(itp->term, "Tried to set pixel outside window bounds")) return -1;
+    }
+  }
+  tok_free(&token_on);
+
+
+  RES_RETURN(r_ERETRY, 1);
+}
+
 int keyword_goto(Itp* itp, Vec* tokens) {
   ASSERT(itp);
   ASSERT(tokens);
@@ -360,17 +399,17 @@ int keyword_if(Itp* itp, Vec* tokens) {
   do {
     then_tok = vec_get(tokens, then_index);
     if (!then_tok) {
-      if (str_cpy_cstr(&itp->error_string, "Line thened without THEN keyword")) return -1;
+      if (str_cpy_cstr(&itp->error_string, "Line ended without THEN keyword")) return -1;
       RES_RETURN(r_EINTERPRET, -1);
     }
     then_index++;
-  } while (then_tok->type == tt_Keyword && then_tok->keyword == tk_Then);
+  } while (then_tok->type != tt_Keyword && then_tok->keyword != tk_Then);
 
   Token res;
-  if (evl_eval(itp, 1, then_index, &res)) return -1;
+  if (evl_eval(itp, 1, then_index - 1, &res)) return -1;
 
   if (tok_is_true(&res)) {
-    if (_handle_conditional_jump(itp, tokens, then_index + 1)) return -1;
+    if (_handle_conditional_jump(itp, tokens, then_index)) return -1;
     RES_RETURN(r_ENONE, 0);
   }
 
@@ -382,9 +421,9 @@ int keyword_if(Itp* itp, Vec* tokens) {
       RES_RETURN(r_ENONE, 0);
     }
     else_index++;
-  } while (else_tok->type == tt_Keyword && else_tok->keyword == tk_Else);
+  } while (else_tok->type != tt_Keyword && else_tok->keyword != tk_Else);
 
-  if (_handle_conditional_jump(itp, tokens, else_index + 1)) return -1;
+  if (_handle_conditional_jump(itp, tokens, else_index)) return -1;
 
   RES_RETURN(r_ENONE, 0);
 }

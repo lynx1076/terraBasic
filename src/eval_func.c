@@ -535,3 +535,91 @@ int eval_val(Itp *itp, Vec *stack, Token *token) {
   RES_RETURN(r_ENONE, 0);
 }
 
+int eval_long(Itp *itp, Vec *stack, Token *token) {
+  ASSERT(itp);
+  ASSERT(stack);
+
+  ASSERT(stack->count >= 1);
+
+  if (token->func.argCount != 1) {
+    if (str_fmt_cstr(&itp->error_string, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  Token res;
+
+  Token rtok;
+  if (vec_pop(stack, &rtok)) return -1;
+
+  if (rtok.type != tt_String) {
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  bool is_float = false;
+  for (size_t i = 0; i < rtok.string.length; i++) {
+    if (rtok.string.text[i] == '.') {
+      is_float = true;
+      break;
+    }
+  }
+  
+  if (is_float) {
+    if (ParseFloat(&res._float, rtok.string.text, rtok.string.length)) return -1;
+    res._long = (long)res._float;
+  } else {
+    if (ParseLong(&res._long, rtok.string.text, rtok.string.length)) return -1;
+  }
+  res.type = tt_Long;
+
+  tok_free(&rtok);
+
+  if (vec_push(stack, &res)) return -1;
+ 
+  RES_RETURN(r_ENONE, 0);
+}
+
+int eval_float(Itp *itp, Vec *stack, Token *token) {
+  ASSERT(itp);
+  ASSERT(stack);
+
+  ASSERT(stack->count >= 1);
+
+  if (token->func.argCount != 1) {
+    if (str_fmt_cstr(&itp->error_string, "Invalid arg count for %s", tok_function_get_cstr(token->func.func))) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  Token res;
+
+  Token rtok;
+  if (vec_pop(stack, &rtok)) return -1;
+
+  if (rtok.type != tt_String) {
+    if (str_fmt_cstr(&itp->error_string, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  bool is_float = false;
+  for (size_t i = 0; i < rtok.string.length; i++) {
+    if (rtok.string.text[i] == '.') {
+      is_float = true;
+      break;
+    }
+  }
+  
+  if (is_float) {
+    if (ParseFloat(&res._float, rtok.string.text, rtok.string.length)) return -1;
+  } else {
+    if (ParseLong(&res._long, rtok.string.text, rtok.string.length)) return -1;
+    res._float = (float)res._long;
+  }
+  res.type = tt_Float;
+
+  tok_free(&rtok);
+
+  if (vec_push(stack, &res)) return -1;
+ 
+  RES_RETURN(r_ENONE, 0);
+}
+

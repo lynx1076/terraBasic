@@ -29,6 +29,7 @@ typedef struct {
 } Itp;
 
 typedef struct {
+  bool persist;
   Str name;
   Token token;
 } ItpVar;

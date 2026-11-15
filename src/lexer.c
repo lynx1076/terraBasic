@@ -72,8 +72,8 @@ int lxr_LexLine(Vec* tokens, Str* error_string, const Str* line) {
     if (token.operator != to_None) {
       token.type = tt_Operator;
       _move_cursor(&lstate, strlen(tok_operator_get_cstr(token.operator)) - 1);
-    } else if (isalpha(c)) {
-      while (isalnum(c) && !_eol_reached(&lstate)) c = _move_cursor(&lstate, 1);
+    } else if (isalpha(c) || c == '_') {
+      while ((isalnum(c) || c == '_') && !_eol_reached(&lstate)) c = _move_cursor(&lstate, 1);
 
       _move_cursor(&lstate, -1);
 

@@ -37,6 +37,7 @@
   X("DIM", tk_Dim, keyword_dim) \
   X("PRINT", tk_Print, keyword_print) \
   X("INPUT", tk_Input, keyword_input) \
+  X("SETP", tk_SetP, keyword_setp) \
   X("GOTO", tk_Goto, keyword_goto) \
   X("GOSUB", tk_Gosub, keyword_gosub) \
   X("RETURN", tk_Return, keyword_return) \
@@ -58,6 +59,8 @@
   X("MID", tf_Mid, eval_mid) \
   X("STR", tf_Str, eval_str) \
   X("VAL", tf_Val, eval_val) \
+  X("LONG", tf_Long, eval_long) \
+  X("FLOAT", tf_Float, eval_float) \
 
 typedef enum {
   tt_Unknown,

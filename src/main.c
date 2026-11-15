@@ -1,8 +1,11 @@
+#include <math.h>
 #include <raylib.h>
 #include <stddef.h>
 #include "interpreter.h"
 #include "result.h"
+#include "str.h"
 #include "terminal.h"
+#include "tokens.h"
 
 
 char* window_title = "terraTree";

@@ -22,5 +22,7 @@ int eval_mid(Itp* itp, Vec* stack, Token* token);
 
 int eval_str(Itp *itp, Vec *stack, Token *token);
 int eval_val(Itp *itp, Vec *stack, Token *token);
+int eval_long(Itp *itp, Vec *stack, Token *token);
+int eval_float(Itp *itp, Vec *stack, Token *token);
 
 #endif
