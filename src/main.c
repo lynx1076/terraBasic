@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
 
   while (true) {
     if (term_update(&term)) return _res;
-    if (itp_shell(&itp)) {
+    if (itp_update(&itp)) {
       if (_res != r_INTERRUPTED) return _res;
       break;
     }

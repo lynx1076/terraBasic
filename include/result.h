@@ -7,6 +7,7 @@
 
 #define RESULTS \
   X(r_ENONE) \
+  X(r_ERETRY) \
   X(r_EUNKNOWN) \
   X(r_DATA_READY) \
   X(r_ENO_DATA) \

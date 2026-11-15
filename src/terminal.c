@@ -85,6 +85,18 @@ int term_update(Terminal* term) {
       term_printf(term, "\n");
     }
 
+    if (IsKeyPressed(KEY_BACKSPACE)) {
+      size_t len = term->input_string.length;
+
+      if (len) {
+        len = len ? len - 1 : 0;
+        if (term->cx) term->cx--;
+        if (term_draw_glyph(term, ' ', term->cx * GLYPH_WIDTH, term->cy * GLYPH_HEIGHT)) return -1;
+
+        if (str_substr(&term->input_string, 0, len)) return -1;
+      }
+    }
+
     if (!term->input_ready) {
       char c = GetCharPressed();
       while (c != '\0') {

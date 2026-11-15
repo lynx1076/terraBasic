@@ -156,12 +156,21 @@ int itp_line_add(Itp* itp, const Str* text, size_t line_num) {
   RES_RETURN(r_ENONE, 0);
 }
 
-int itp_shell(Itp* itp) {
+int itp_update(Itp* itp) {
   ASSERT(itp);
 
   if (term_get_interrupt(itp->term)) {
-    if (itp->running) itp->running = false;
+    if (itp->input_await) itp->input_await = false;
+    else if (itp->running) itp->running = false;
     else RES_RETURN(r_INTERRUPTED, 1);
+  }
+
+  if (itp->input_await) {
+    if (term_get_input(itp->term, itp->input_await_str)) {
+      if (_res != r_DATA_READY) return -1;
+      itp->input_await = false;
+    }
+    RES_RETURN(r_ENONE, 0);
   }
 
   if (itp->running) {
@@ -177,8 +186,8 @@ int itp_shell(Itp* itp) {
       RES_RETURN(r_ENONE, 0);
     }
 
-    if (!itp->jumped) itp->line_index++;
-    itp->jumped = false;
+    if (!itp->dont_jump) itp->line_index++;
+    itp->dont_jump = false;
 
     if (itp->line_index >= itp->lines.count) {
       itp->running = false;
@@ -271,7 +280,10 @@ int itp_interpret_line(Itp* itp) {
 
   switch (token->type) {
     case tt_Keyword: {
-      if (handle_keyword(itp)) return -1;
+      if (handle_keyword(itp)) {
+        if (_res != r_ERETRY) return -1;
+        itp->dont_jump = true;
+      }
     } break;
     case tt_Variable: {
       if (handle_variable(itp)) return -1;
@@ -294,7 +306,7 @@ int itp_goto(Itp* itp, size_t line_num) {
     RES_RETURN(r_EINTERPRET, -1);
   }
 
-  itp->jumped = itp->running;
+  itp->dont_jump = itp->running;
   itp->running = true;
 
   RES_RETURN(r_ENONE, 0);
@@ -316,7 +328,7 @@ int itp_gosub(Itp* itp, size_t line_num) {
     RES_RETURN(r_EINTERPRET, -1);
   }
 
-  itp->jumped = true;
+  itp->dont_jump = true;
 
   RES_RETURN(r_ENONE, 0);
 }
@@ -345,12 +357,12 @@ int itp_print_line(Itp* itp, ItpLine* line) {
 
   if (str_cstr(&line->text)) return -1;
 
-  if (term_printf(itp->term, "Line %zu\n", line->line_num)) return -1;
+  printf("Line %zu\n", line->line_num);
   for (size_t i = 0; i < line->tokens.count; i++) {
     Token* token = vec_get(&line->tokens, i);
-    if (term_printf(itp->term, "(%zu): ", i)) return -1;
+    printf("(%zu): ", i);
     tok_print(token);
-    if (term_printf(itp->term, "\n")) return -1;
+    printf("\n");
   }
 
   RES_RETURN(r_ENONE, 0);

@@ -2,6 +2,7 @@
 #define TOKENS_H
 
 #include "str.h"
+#include "terminal.h"
 #include <stddef.h>
 #include <stdbool.h>
 
@@ -125,7 +126,7 @@ TokenOperator tok_get_operator(const char* cstr, size_t max_len);
 TokenFunction tok_get_function(const char* cstr, size_t len);
 int tok_get_operator_precedence(TokenOperator op);
 
-int tok_print_value(Token* token);
+int tok_print_value(Terminal* term, Token* token);
 
 bool tok_is_true(Token* token);
 

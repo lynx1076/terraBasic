@@ -1,4 +1,5 @@
 #include "tokens.h"
+#include "terminal.h"
 #include "debug.h"
 #include "result.h"
 #include "str.h"
@@ -115,7 +116,7 @@ TokenKeyword tok_get_keyword(const char* cstr, size_t len) {
   
   if (!len) RES_RETURN(r_ENONE, tk_None);
  
-#define X(TOK_STR, TOK_ENUM, TOK_EVAL)   if (!strncicmp((TOK_STR), cstr, len)) RES_RETURN(r_ENONE, (TOK_ENUM));
+#define X(TOK_STR, TOK_ENUM, TOK_EVAL)   if (!strncicmp((TOK_STR), cstr, strlen((TOK_STR)))) RES_RETURN(r_ENONE, (TOK_ENUM));
   TOK_KEYWORDS
 #undef X
 
@@ -127,7 +128,7 @@ TokenFunction tok_get_function(const char* cstr, size_t len) {
   
   if (!len) RES_RETURN(r_ENONE, tf_None);
  
-#define X(TOK_STR, TOK_ENUM, TOK_EVAL)   if (!strncicmp((TOK_STR), cstr, len)) RES_RETURN(r_ENONE, (TOK_ENUM));
+#define X(TOK_STR, TOK_ENUM, TOK_EVAL)   if (!strncicmp((TOK_STR), cstr, strlen((TOK_STR)))) RES_RETURN(r_ENONE, (TOK_ENUM));
   TOK_FUNCTIONS
 #undef X
 
@@ -187,23 +188,24 @@ int tok_get_operator_precedence(TokenOperator op) {
   }
 }
 
-int tok_print_value(Token* token) {
+int tok_print_value(Terminal* term, Token* token) {
+  ASSERT(term);
   ASSERT(token);
 
   switch (token->type) {
     case tt_Variable:
     case tt_String: {
       if (str_cstr(&token->string)) return -1;
-      printf("%s", token->string.text);
+      if (term_printf(term, "%s", token->string.text)) return -1;
     } break;
     case tt_Float: {
-      printf("%f", token->_float);
+      if (term_printf(term, "%f", token->_float)) return -1;
     } break;
     case tt_Long: {
-      printf("%li", token->_long);
+      if (term_printf(term, "%li", token->_long)) return -1;
     } break;
     default: {
-      printf("Undefined");
+      if (term_printf(term, "UNDEFINED")) return -1;
     } break;
   }
 

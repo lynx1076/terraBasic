@@ -78,7 +78,7 @@ int keyword_none(Itp* itp, Vec* tokens) {
   (void)itp;
   (void)tokens;
 
-  printf("Tried to evaluate keyword that should not be evaluated here!\n");
+  if (term_printf(itp->term, "Tried to evaluate keyword that should not be evaluated here!\n")) return -1;
   ASSERT(0);
 }
 
@@ -99,10 +99,11 @@ int keyword_list(Itp* itp, Vec* tokens) {
       RES_RETURN(r_EINTERPRET, -1);
     }
     ItpLine* line = itp_get_line(itp, num_tok->_long, NULL);
-    if (!line) printf("Line is undefined\n");
-    else {
+    if (!line) {
+      if (term_printf(itp->term, "Line is undefined\n")) return -1;
+    } else {
       if (str_cstr(&line->text)) return -1;
-      printf("%s\n", line->text.text);
+      if (term_printf(itp->term, "%s\n", line->text.text)) return -1;
     }
     RES_RETURN(r_ENONE, 0);
   } else if (tokens->count != 1) {
@@ -110,13 +111,13 @@ int keyword_list(Itp* itp, Vec* tokens) {
     RES_RETURN(r_EINTERPRET, -1);
   }
 
-  printf("%zu line%s:\n\n", itp->lines.count, itp->lines.count == 1 ? "" : "s");
+  if (term_printf(itp->term, "%zu line%s:\n\n", itp->lines.count, itp->lines.count == 1 ? "" : "s")) return -1;
   for (size_t i = 0; i < itp->lines.count; i++) {
     ItpLine* line = vec_get(&itp->lines, i);
     if (str_cstr(&line->text)) return -1;
-    printf("%s\n", line->text.text);
+    if (term_printf(itp->term, "%s\n", line->text.text)) return -1;
   }
-  printf("Done\n");
+  if (term_printf(itp->term, "Done\n")) return -1;
 
   RES_RETURN(r_ENONE, 0);
 }
@@ -139,7 +140,7 @@ int keyword_run(Itp* itp, Vec* tokens) {
   itp->line_index = 0;
   itp->current_line = vec_get(&itp->lines, 0);
 
-  itp->jumped = false;
+  itp->dont_jump = false;
   itp->running = true;
 
   if (itp_clear(itp)) return -1;
@@ -215,8 +216,8 @@ int keyword_print(Itp* itp, Vec* tokens) {
   Token print_tok;
 
   if (evl_eval(itp, 1, tokens->count + 1, &print_tok)) return -1;
-  tok_print_value(&print_tok);
-  printf("\n");
+  if (tok_print_value(itp->term, &print_tok)) return -1;
+  if (term_printf(itp->term, "\n")) return -1;
   tok_free(&print_tok);
 
   RES_RETURN(r_ENONE, 0);
@@ -249,11 +250,12 @@ int keyword_input(Itp* itp, Vec* tokens) {
   if (str_init(&var->token.string)) return -1;
 
   if (str_cstr(&prompt_tok->string)) return -1;
-  printf("%s", prompt_tok->string.text);
-  fflush(stdout);
-  //if (get_input(&var->token.string)) return -1;
+  if (term_printf(itp->term, "%s", prompt_tok->string.text)) return -1;
 
-  RES_RETURN(r_ENONE, 0);
+  itp->input_await = true;
+  itp->input_await_str = &var->token.string;
+
+  RES_RETURN(r_ERETRY, 1);
 }
 
 int keyword_goto(Itp* itp, Vec* tokens) {
@@ -299,7 +301,7 @@ int keyword_end(Itp* itp, Vec* tokens) {
   ASSERT(itp);
   ASSERT(tokens);
 
-  if (!itp->running) printf("Program is not running\n");
+  if (!itp->running) if (term_printf(itp->term, "Program is not running\n")) return -1;
 
   itp->running = false;
 
