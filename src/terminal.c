@@ -2,9 +2,13 @@
 #include "debug.h"
 #include "font_data.h"
 #include "result.h"
+#include <stdarg.h>
 #include <raylib.h>
+#include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 
 int term_init(Terminal* term, const char* window_title) {
@@ -81,11 +85,36 @@ int term_draw_glyph(Terminal* term, char c, unsigned int x, unsigned int y) {
 int term_print_glyph(Terminal* term, char c) {
   ASSERT(term);
 
-  if (term_draw_glyph(term, c, term->cx * GLYPH_WIDTH, term->cy * GLYPH_HEIGHT)) return -1;
+  switch (c) {
+    case '\n': {
+      term->cx = 0;
+      term->cy++;
+    } break;
+    default: {
+      if (term_draw_glyph(term, c, term->cx * GLYPH_WIDTH, term->cy * GLYPH_HEIGHT)) return -1;
+      term->cx++;
+    } break;
+  }
 
-  term->cx++;
   term->cy += term->cx / TERMINAL_WIDTH_C;
   term->cx = term->cx % TERMINAL_WIDTH_C;
+
+  RES_RETURN(r_ENONE, 0);
+}
+
+int term_printf(Terminal* term, const char* fmt, ...) {
+  va_list va;
+  va_start(va, fmt);
+  char* buff;
+  int bytes = vasprintf(&buff, fmt, va);
+  va_end(va);
+
+  if (bytes < 0) RES_RETURN(r_EUNKNOWN, -1);
+
+  for (size_t i = 0; i < (size_t)bytes; i++) {
+    if (term_print_glyph(term, buff[i])) return -1;
+  }
+  free(buff);
 
   RES_RETURN(r_ENONE, 0);
 }

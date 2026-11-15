@@ -32,6 +32,7 @@ int term_update(Terminal* term);
 int term_set_pixel(Terminal* term, unsigned int x, unsigned int y, bool pixel_on);
 int term_draw_glyph(Terminal* term, char c, unsigned int x, unsigned int y);
 int term_print_glyph(Terminal* term, char c);
+int term_printf(Terminal* term, const char* fmt, ...);
 bool term_get_interrupt(Terminal* term);
 
 #endif
