@@ -273,7 +273,7 @@ int keyword_setp(Itp* itp, Vec* tokens) {
     RES_RETURN(r_EINTERPRET, -1);
   }
 
-  Token* toky = vec_get(tokens, 1);
+  Token* toky = vec_get(tokens, 2);
   if (toky->type == tt_Variable) {
     ItpVar* var = itp_get_var(itp, &toky->string);
     if (!var) tokx->type = tt_None;
@@ -287,12 +287,10 @@ int keyword_setp(Itp* itp, Vec* tokens) {
   Token token_on;
   if (evl_eval(itp, 3, tokens->count, &token_on)) return -1;
   if (term_set_pixel(itp->term, tokx->_long, toky->_long, tok_is_true(&token_on))) {
-    if (_res == r_EBOUNDS) {
-      if (term_printf(itp->term, "Tried to set pixel outside window bounds")) return -1;
-    }
+    if (_res == r_EBOUNDS) if (str_cpy_cstr(&itp->error_string, "Tried setting pixel outside window")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
   }
   tok_free(&token_on);
-
 
   RES_RETURN(r_ERETRY, 1);
 }

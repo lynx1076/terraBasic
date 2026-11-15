@@ -212,8 +212,13 @@ int itp_update(Itp* itp) {
       RES_RETURN(r_ENONE, 0);
     }
 
-    if (!itp->dont_jump) itp->line_index++;
+    if (!itp->dont_jump) {
+      itp->line_index++;
+    } else {
+      printf("Avoided jump!\n");
+    }
     itp->dont_jump = false;
+    printf("Running line %zu\n", itp->line_index);
 
     if (itp->line_index >= itp->lines.count) {
       itp->running = false;
