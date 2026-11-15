@@ -37,6 +37,7 @@ typedef struct {
 int itp_init(Itp* itp);
 void itp_free(Itp* itp);
 int itp_clear(Itp* itp);
+int itp_load_constants(Itp* itp);
 ItpLine* itp_get_line(Itp* itp, size_t line_num, size_t* index);
 
 int itp_var_add(Itp* itp, Str* name, Token* token);

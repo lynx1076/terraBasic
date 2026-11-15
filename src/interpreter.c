@@ -71,6 +71,8 @@ int itp_init(Itp* itp) {
 
   itp->current_line = NULL;
   itp->running = false;
+
+  if (itp_load_constants(itp)) return -1;
   
   RES_RETURN(r_ENONE, 0);
 }
@@ -108,6 +110,8 @@ int itp_clear(Itp* itp) {
 
   vec_clear(&itp->variables);
   vec_clear(&itp->sub_stack);
+
+  if (itp_load_constants(itp)) return -1;
 
   RES_RETURN(r_ENONE, 0);
 }
