@@ -325,18 +325,18 @@ int _handle_conditional_jump(Itp* itp, Vec* tokens, size_t tok_index) {
     case tk_Goto: {
       Token* line_tok = vec_get(tokens, tok_index + 1);
       if (line_tok->type != tt_Long) {
-        if (str_cpy_cstr(&itp->error_string, "If line number after GOTO")) return -1;
+        if (str_cpy_cstr(&itp->error_string, "Invalid line number after GOTO")) return -1;
         RES_RETURN(r_EINTERPRET, -1);
       }
-      if (itp_goto(itp, jmp_tok->_long)) return -1;
+      if (itp_goto(itp, line_tok->_long)) return -1;
     } break;
     case tk_Gosub: {
       Token* line_tok = vec_get(tokens, tok_index + 1);
       if (line_tok->type != tt_Long) {
-        if (str_cpy_cstr(&itp->error_string, "If line number after GOTO")) return -1;
+        if (str_cpy_cstr(&itp->error_string, "Invalid line number after GOSUB")) return -1;
         RES_RETURN(r_EINTERPRET, -1);
       }
-      if (itp_gosub(itp, jmp_tok->_long)) return -1;
+      if (itp_gosub(itp, line_tok->_long)) return -1;
     } break;
     case tk_Return: {
       if (itp_return(itp)) return -1;
