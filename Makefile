@@ -2,9 +2,9 @@ PROJNAME = terraBasic
 VERSION = 0.1
 
 CC = gcc
-CFLAGS = -Wall -Wextra -g -O0 -DVERSION="$(VERSION)" -DDEBUG
+CFLAGS = -Wall -Wextra -O3 -DVERSION="$(VERSION)" # -O0 -g -DDEBUG
 CPPFLAGS =
-LDFLAGS = -g -O0 #-fsanitize=address,undefined -fno-omit-frame-pointer
+LDFLAGS = -O3 #-g -O0 #-fsanitize=address,undefined -fno-omit-frame-pointer
 LDLIBS = -lm
 
 BUILD_DIR = .build
