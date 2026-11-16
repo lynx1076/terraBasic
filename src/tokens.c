@@ -182,7 +182,6 @@ int tok_get_operator_precedence(TokenOperator op) {
       return 20;
     case to_Pow:
       return 30;
-    case to_None:
     default:
       return 0;
   }

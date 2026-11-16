@@ -377,7 +377,7 @@ int itp_return(Itp* itp) {
 }
 
 int itp_print_line(Itp* itp, ItpLine* line) {
-  ASSERT(itp);
+  (void)itp;
   ASSERT(line);
 
   if (str_cstr(&line->text)) return -1;

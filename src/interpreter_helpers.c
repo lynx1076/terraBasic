@@ -80,6 +80,8 @@ int keyword_none(Itp* itp, Vec* tokens) {
 
   if (term_printf(itp->term, "Tried to evaluate keyword that should not be evaluated here!\n")) return -1;
   ASSERT(0);
+
+  RES_RETURN(r_EUNREACHABLE, -1);
 }
 
 int keyword_list(Itp* itp, Vec* tokens) {
@@ -125,6 +127,8 @@ int keyword_list(Itp* itp, Vec* tokens) {
 int keyword_run(Itp* itp, Vec* tokens) {
   ASSERT(itp);
   ASSERT(tokens);
+
+  (void)tokens;
 
   if (itp->running) {
     if (str_cpy_cstr(&itp->error_string, "Cannot run program from within itsself")) return -1;
@@ -268,19 +272,31 @@ int keyword_setp(Itp* itp, Vec* tokens) {
     if (!var) tokx->type = tt_None;
     else tokx = &var->token;
   }
-  if (!tokx || tokx->type != tt_Long) {
-    if (str_cpy_cstr(&itp->error_string, "Need long for pixel x")) return -1;
+
+  if (!tokx) {
+    if (str_cpy_cstr(&itp->error_string, "Need long for pixel x got none")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  if (tokx->type != tt_Long) {
+    if (str_fmt_cstr(&itp->error_string, "Need long for pixel x got %s", tok_get_type_cstr(tokx->type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
   Token* toky = vec_get(tokens, 2);
   if (toky->type == tt_Variable) {
     ItpVar* var = itp_get_var(itp, &toky->string);
-    if (!var) tokx->type = tt_None;
+    if (!var) toky->type = tt_None;
     else toky = &var->token;
   }
-  if (!toky || toky->type != tt_Long) {
-    if (str_cpy_cstr(&itp->error_string, "Need long for pixel y")) return -1;
+
+  if (!toky) {
+    if (str_cpy_cstr(&itp->error_string, "Need long for pixel y got none")) return -1;
+    RES_RETURN(r_EINTERPRET, -1);
+  }
+
+  if (toky->type != tt_Long) {
+    if (str_fmt_cstr(&itp->error_string, "Need long for pixel y got %s", tok_get_type_cstr(toky->type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
@@ -329,6 +345,8 @@ int keyword_return(Itp* itp, Vec* tokens) {
   ASSERT(itp);
   ASSERT(tokens);
 
+  (void)tokens;
+
   if (itp_return(itp)) return -1;
 
   RES_RETURN(r_ENONE, 0);
@@ -337,6 +355,8 @@ int keyword_return(Itp* itp, Vec* tokens) {
 int keyword_end(Itp* itp, Vec* tokens) {
   ASSERT(itp);
   ASSERT(tokens);
+
+  (void)tokens;
 
   if (!itp->running) if (term_printf(itp->term, "Program is not running\n")) return -1;
 

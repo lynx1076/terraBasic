@@ -551,26 +551,16 @@ int eval_long(Itp *itp, Vec *stack, Token *token) {
   Token rtok;
   if (vec_pop(stack, &rtok)) return -1;
 
-  if (rtok.type != tt_String) {
+  if (rtok.type != tt_Float && rtok.type != tt_Long) {
     if (str_fmt_cstr(&itp->error_string, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
-  bool is_float = false;
-  for (size_t i = 0; i < rtok.string.length; i++) {
-    if (rtok.string.text[i] == '.') {
-      is_float = true;
-      break;
-    }
-  }
-  
-  if (is_float) {
-    if (ParseFloat(&res._float, rtok.string.text, rtok.string.length)) return -1;
+  res = rtok;
+  if (rtok.type == tt_Float) {
     res._long = (long)res._float;
-  } else {
-    if (ParseLong(&res._long, rtok.string.text, rtok.string.length)) return -1;
+    res.type = tt_Long;
   }
-  res.type = tt_Long;
 
   tok_free(&rtok);
 
@@ -595,26 +585,16 @@ int eval_float(Itp *itp, Vec *stack, Token *token) {
   Token rtok;
   if (vec_pop(stack, &rtok)) return -1;
 
-  if (rtok.type != tt_String) {
+  res = rtok;
+  if (rtok.type != tt_Float && rtok.type != tt_Long) {
     if (str_fmt_cstr(&itp->error_string, "Cannot get %s of %s", tok_function_get_cstr(token->func.func), tok_get_type_cstr(rtok.type))) return -1;
     RES_RETURN(r_EINTERPRET, -1);
   }
 
-  bool is_float = false;
-  for (size_t i = 0; i < rtok.string.length; i++) {
-    if (rtok.string.text[i] == '.') {
-      is_float = true;
-      break;
-    }
-  }
-  
-  if (is_float) {
-    if (ParseFloat(&res._float, rtok.string.text, rtok.string.length)) return -1;
-  } else {
-    if (ParseLong(&res._long, rtok.string.text, rtok.string.length)) return -1;
+  if (rtok.type == tt_Long) {
     res._float = (float)res._long;
+    res.type = tt_Float;
   }
-  res.type = tt_Float;
 
   tok_free(&rtok);
 

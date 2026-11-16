@@ -192,6 +192,17 @@ int _get_rpn(Itp* itp, size_t start, size_t stop, Vec* rpn) {
           if (vec_push(rpn, &tmpTok)) return -1;
           if (vec_push(&stack, token)) return -1;
 
+          size_t i = stack.count - 2;
+          stack_token = vec_get(&stack, i);
+          stack_precedence = tok_get_operator_precedence(stack_token->operator);
+
+          while (stack_precedence > token_precedence) {
+            if (stack.count < 2) break;
+            if (vec_pop_at(&stack, i, &tmpTok)) return -1;
+            if (vec_push(rpn, &tmpTok)) return -1;
+            stack_token = vec_get(&stack, i);
+            stack_precedence = tok_get_operator_precedence(stack_token->operator);
+          }
         } else {
           if (vec_push(&stack, token)) return -1;
         }

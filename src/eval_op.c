@@ -32,6 +32,8 @@ int eval_none(Itp* itp, Vec* stack) {
 
   printf("Tried to evaluate operator that should not be evaluated here!\n");
   ASSERT(0);
+
+  RES_RETURN(r_EUNREACHABLE, 0);
 }
 
 int eval_plus(Itp* itp, Vec* stack) {
