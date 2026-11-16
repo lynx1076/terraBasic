@@ -5,7 +5,7 @@
 #include "terminal.h"
 
 
-char* window_title = "terraTree";
+char* window_title = "terraBasic";
 Itp itp;
 Terminal term;
 
@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
 
   term.background_color = DARKBLUE;
   term.text_color = GREEN;
-  if (term_init(&term, "terraBasic")) return _res;
+  if (term_init(&term, window_title)) return _res;
   if (term_printf(&term, "terraBasic v%s\n", VERSION)) return _res;
 
   if (itp_init(&itp)) return _res;

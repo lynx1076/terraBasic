@@ -35,7 +35,8 @@ Use CTRL+C to cancel the running program at any time
 "LET" Define variable, optional  
 "DIM" Declare variable, necessary  
 "PRINT" Print anything  
-"INPUT" Provide a string and a variable "NO COMMA" to get user input  
+"INPUT" Provide a string and a variable (NO COMMA) to get user input  
+"SETPIXEL" Provide x, y and pixel state (slow)  
 "GOTO" Goto line 10, 20 or heck even 100 just don't go to france  
 "GOSUB" Go subroutine (What did you expect???)  
 "RETURN" No more sub  
@@ -57,9 +58,11 @@ Use CTRL+C to cancel the running program at any time
 "MID" is a solid choice  
 "STR" Alternatively use ""+x to save literally nothing  
 "VAL" Write your own parser. Mine sucks  
+"LONG" Float to long, long stays long  
+"FLOAT" Same same but different  
   
 ### Example program  
-I coul've written a loading function and maybe I will someday but to increas accuracy I've decided to make you all type these in by hand. Have fun and NO TYPOS!!!  
+I coul've written a loading function and maybe I will someday but to increase accuracy I've decided to make you all type these in by hand. Have fun and NO TYPOS!!!  
   
 #### Poor man's calculator  
   
@@ -76,4 +79,24 @@ I coul've written a loading function and maybe I will someday but to increas acc
 103 b = val(b)  
 104 res = a + b  
 105 return  
+
+#### Tiny plotter
+  
+1 dim x  
+2 dim y  
+3 x = 0  
+  
+10 gosub 100  
+11 y = y * _height * 0.2 + _height * 0.5  
+12 y = long(y)  
+13 setpixel x y 1  
+14 x = x + 1  
+15 if x >= _width then 50  
+16 goto 10  
+  
+50 end  
+
+Put your function here, this is just an example  
+100 y = sin(x * 0.1)  
+101 return  
 

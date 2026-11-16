@@ -217,6 +217,11 @@ int keyword_print(Itp* itp, Vec* tokens) {
   ASSERT(itp);
   ASSERT(tokens);
 
+  if (tokens->count <= 1) {
+    if (term_printf(itp->term, "\n")) return -1;
+    RES_RETURN(r_ENONE, 0);
+  }
+
   Token print_tok;
 
   if (evl_eval(itp, 1, tokens->count + 1, &print_tok)) return -1;
