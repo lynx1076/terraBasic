@@ -579,9 +579,9 @@ int eval_le(Itp* itp, Vec* stack) {
     if (r_is_float || l_is_float) {
       if (!r_is_float) rtok._float = (float)rtok._long;
       if (!l_is_float) ltok._float = (float)ltok._long;
-      cmp = ltok._float < rtok._float;
+      cmp = ltok._float <= rtok._float;
     } else {
-      cmp = ltok._long < rtok._long;
+      cmp = ltok._long <= rtok._long;
     }
   }
 
@@ -625,9 +625,9 @@ int eval_ge(Itp* itp, Vec* stack) {
     if (r_is_float || l_is_float) {
       if (!r_is_float) rtok._float = (float)rtok._long;
       if (!l_is_float) ltok._float = (float)ltok._long;
-      cmp = ltok._float > rtok._float;
+      cmp = ltok._float >= rtok._float;
     } else {
-      cmp = ltok._long > rtok._long;
+      cmp = ltok._long >= rtok._long;
     }
   }
 

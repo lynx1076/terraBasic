@@ -214,11 +214,8 @@ int itp_update(Itp* itp) {
 
     if (!itp->dont_jump) {
       itp->line_index++;
-    } else {
-      printf("Avoided jump!\n");
     }
     itp->dont_jump = false;
-    printf("Running line %zu\n", itp->line_index);
 
     if (itp->line_index >= itp->lines.count) {
       itp->running = false;
@@ -311,10 +308,7 @@ int itp_interpret_line(Itp* itp) {
 
   switch (token->type) {
     case tt_Keyword: {
-      if (handle_keyword(itp)) {
-        if (_res != r_ERETRY) return -1;
-        itp->dont_jump = true;
-      }
+      if (handle_keyword(itp)) return -1;
     } break;
     case tt_Variable: {
       if (handle_variable(itp)) return -1;

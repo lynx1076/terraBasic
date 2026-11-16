@@ -292,7 +292,7 @@ int keyword_setp(Itp* itp, Vec* tokens) {
   }
   tok_free(&token_on);
 
-  RES_RETURN(r_ERETRY, 1);
+  RES_RETURN(r_ENONE, 0);
 }
 
 int keyword_goto(Itp* itp, Vec* tokens) {
